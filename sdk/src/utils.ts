@@ -6,11 +6,11 @@ import {
   SharedObjectRef,
   SuiObjectDataOptions,
   SuiObjectRef,
-  SuiObjectResponse,
   TransactionArgument,
   TransactionBlock,
 } from '@mysten/sui.js';
 import { KioskData } from './query/kiosk';
+import { DynamicFieldInfo } from '@mysten/sui.js/dist/types/dynamic_fields';
 
 /**
  * A valid argument for any of the Kiosk functions.
@@ -52,9 +52,9 @@ export function objArg(
 }
 
 // helper to extract kiosk data from dynamic fields.
-export const extractKioskData = (data: SuiObjectResponse[]): KioskData => {
+export const extractKioskData = (data: DynamicFieldInfo[]): KioskData => {
   return data.reduce<KioskData>(
-    (acc: KioskData, val: SuiObjectResponse) => {
+    (acc: KioskData, val: DynamicFieldInfo) => {
       // e.g. 0x2::kiosk::Item -> kiosk::Item
       const type = val.name.type.split('::').slice(-2).join('::');
 
