@@ -79,7 +79,6 @@ export function extractKioskData(data: DynamicFieldInfo[]): KioskData {
           acc.items.push({
             itemId: val.objectId,
             itemType: val.objectType,
-            bcsName: val.bcsName,
           });
           break;
         case 'kiosk::Listing':
@@ -88,7 +87,6 @@ export function extractKioskData(data: DynamicFieldInfo[]): KioskData {
             itemId: val.name.value.id,
             listingId: val.objectId,
             isExclusive: val.name.value.is_exclusive,
-            bcsName: val.bcsName,
           });
           break;
       }

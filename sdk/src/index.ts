@@ -6,3 +6,4 @@ export * from './tx/transfer-policy';
 export * from './query/kiosk';
 export * from './bcs';
 export * from './utils';
+export * from './query/transfer-policy';

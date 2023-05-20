@@ -7,6 +7,7 @@ import {
   SuiAddress,
   SuiObjectDataOptions,
   SuiObjectResponse,
+  bcs,
 } from '@mysten/sui.js';
 import { extractKioskData, getKioskObject, getObjects } from '../utils';
 import { Kiosk } from '../bcs';
@@ -25,11 +26,8 @@ export type KioskListing = {
    * TODO: consider renaming the field for better indication.
    */
   isExclusive: boolean;
-
   /** The ID of the listing */
   listingId: string;
-  /** Can be used to query a dynamic field */
-  bcsName: string;
 };
 
 /**
@@ -41,8 +39,6 @@ export type KioskItem = {
   itemId: string;
   /** The type of the Item */
   itemType: string;
-  /** Can be used to query a dynamic field */
-  bcsName: string;
 };
 
 /**
@@ -50,7 +46,7 @@ export type KioskItem = {
  */
 export type KioskData = {
   items: KioskItem[] | SuiObjectResponse[];
-  listings: KioskListing[] | SuiObjectResponse[];
+  listings: KioskListing[];
   itemIds: string[];
   listingIds: string[];
   kiosk?: Kiosk;
@@ -66,7 +62,7 @@ export type FetchKioskOptions = {
   includeKioskFields?: boolean;
   includeItems?: boolean;
   itemOptions?: SuiObjectDataOptions;
-  includeListings?: boolean;
+  withListingPrices?: boolean;
   listingOptions?: SuiObjectDataOptions;
 };
 
@@ -80,9 +76,8 @@ export async function fetchKiosk(
   {
     includeKioskFields = false,
     includeItems = false,
-    includeListings = false,
+    withListingPrices = false,
     itemOptions = { showDisplay: true, showType: true },
-    listingOptions = { showContent: true },
   }: FetchKioskOptions,
 ): Promise<PagedKioskData> {
   provider.multiGetObjects;
@@ -104,14 +99,17 @@ export async function fetchKiosk(
     includeItems
       ? getObjects(provider, kioskData.itemIds, itemOptions)
       : Promise.resolve([]),
-    includeListings
-      ? getObjects(provider, kioskData.listingIds, listingOptions)
+    withListingPrices
+      ? getObjects(provider, kioskData.listingIds, { showBcs: true })
       : Promise.resolve([]),
   ]);
 
   if (includeKioskFields) kioskData.kiosk = kiosk;
   if (includeItems) kioskData.items = itemObjects;
-  if (includeListings) kioskData.listings = listingObjects;
+  if (withListingPrices) kioskData.listings.map((l, i) => {
+    // @ts-ignore // until type definitions are updated in TS SDK;
+    l.price = bcs.de('u64', listingObjects[i].data?.bcs.bcsBytes, 'base64');
+  });
 
   return {
     data: kioskData,
