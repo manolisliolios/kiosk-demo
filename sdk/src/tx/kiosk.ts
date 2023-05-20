@@ -152,7 +152,7 @@ export function delist(
   itemType: string,
   kiosk: ObjectArgument,
   kioskCap: ObjectArgument,
-  itemId: SuiAddress
+  itemId: SuiAddress,
 ): void {
   tx.moveCall({
     target: `${KIOSK_MODULE}::delist`,
@@ -160,11 +160,10 @@ export function delist(
     arguments: [
       objArg(tx, kiosk),
       objArg(tx, kioskCap),
-      tx.pure(itemId, 'address')
+      tx.pure(itemId, 'address'),
     ],
   });
 }
-
 
 /**
  * Call the `kiosk::place_and_list<T>(Kiosk, KioskOwnerCap, Item, u64)` function.
@@ -224,8 +223,10 @@ export function withdrawFromKiosk(
   kioskCap: ObjectArgument,
   amount: string | bigint | null,
 ): TransactionArgument {
-
-  let amountArg = amount !== null ? tx.pure(amount, 'Option<u64>') : tx.pure({ None: true }, 'Option<u64>');
+  let amountArg =
+    amount !== null
+      ? tx.pure(amount, 'Option<u64>')
+      : tx.pure({ None: true }, 'Option<u64>');
 
   let [coin] = tx.moveCall({
     target: `${KIOSK_MODULE}::withdraw`,

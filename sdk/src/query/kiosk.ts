@@ -68,7 +68,7 @@ export type FetchKioskOptions = {
   itemOptions?: SuiObjectDataOptions;
   includeListings?: boolean;
   listingOptions?: SuiObjectDataOptions;
-}
+};
 
 /**
  *
@@ -82,10 +82,10 @@ export async function fetchKiosk(
     includeItems = false,
     includeListings = false,
     itemOptions = { showDisplay: true, showType: true },
-    listingOptions = { showContent: true }
+    listingOptions = { showContent: true },
   }: FetchKioskOptions,
 ): Promise<PagedKioskData> {
-  provider.multiGetObjects
+  provider.multiGetObjects;
   const { data, nextCursor, hasNextPage } = await provider.getDynamicFields({
     parentId: kioskId,
     ...pagination,
@@ -98,9 +98,15 @@ export async function fetchKiosk(
   // For items, we usually seek the Display.
   // For listings we usually seek the DF value (price) / exclusivity.
   const [kiosk, itemObjects, listingObjects] = await Promise.all([
-    includeKioskFields ? getKioskObject(provider, kioskId) : Promise.resolve(undefined),
-    includeItems ? getObjects(provider, kioskData.itemIds, itemOptions) : Promise.resolve([]),
-    includeListings ? getObjects(provider, kioskData.listingIds, listingOptions) : Promise.resolve([]),
+    includeKioskFields
+      ? getKioskObject(provider, kioskId)
+      : Promise.resolve(undefined),
+    includeItems
+      ? getObjects(provider, kioskData.itemIds, itemOptions)
+      : Promise.resolve([]),
+    includeListings
+      ? getObjects(provider, kioskData.listingIds, listingOptions)
+      : Promise.resolve([]),
   ]);
 
   if (includeKioskFields) kioskData.kiosk = kiosk;

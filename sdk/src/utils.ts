@@ -52,14 +52,17 @@ export function objArg(
   throw new Error('Invalid argument type');
 }
 
-export async function getKioskObject(provider: JsonRpcProvider, id: string): Promise<Kiosk> {
+export async function getKioskObject(
+  provider: JsonRpcProvider,
+  id: string,
+): Promise<Kiosk> {
   const queryRes = await provider.getObject({ id, options: { showBcs: true } });
 
   if (!queryRes || queryRes.error || !queryRes.data) {
     throw new Error(`Kiosk ${id} not found; ${queryRes.error}`);
   }
 
-  // @ts-ignore
+  // @ts-ignore // needs a fix in TS SDK types
   return bcs.de('Kiosk', queryRes.data.bcs!.bcsBytes, 'base64');
 }
 
