@@ -6,7 +6,7 @@ import { KioskData as LocalKioskDataParams } from "../KioskData";
 import { useRpc } from "../../hooks/useRpc";
 import { useEffect, useState } from "react";
 import { KioskItem as KioskItemCmp } from "./KioskItem";
-import { TransactionBlock, getObjectFields } from "@mysten/sui.js";
+import { SuiObjectResponse, TransactionBlock, getObjectFields } from "@mysten/sui.js";
 import { ListPrice } from "../Modals/ListPrice";
 import { OwnedObjectType } from "../Inventory/OwnedObjects";
 import { parseObjectDisplays } from "../../utils/utils";
@@ -44,60 +44,35 @@ export function KioskItems({ kioskId, kioskOwnerCap, address }: { address: strin
         if (!kioskId) return;
         setLoading(true);
 
-        const { data: res } = await fetchKiosk(provider, kioskId, { limit: 1000 }); // could also add `cursor` for pagination
-        setKioskData(res);
+        const { data: res } = await fetchKiosk(provider, kioskId, { limit: 1000 }, {
+            includeItems: true,
+            includeListings: true
+        }); // could also add `cursor` for pagination
 
-        await Promise.all([fetchKioskListings(res.listingIds), fetchKioskItems(res.itemIds)]);
+        setKioskData(res);
+        setKioskItems(parseObjectDisplays(res.items as SuiObjectResponse[] || []));
+        processKioskListings(res.listings as SuiObjectResponse[] || []);
         setLoading(false);
     }
 
-    const fetchKioskListings = async (listingIds: string[]) => {
-
-
-        if (listingIds.length === 0) return;
-        const data = await provider.multiGetObjects({
-            ids: listingIds,
-            options: {
-                showType: true,
-                showContent: true
-            }
-        });
-
-        if (!data) return;
+    const processKioskListings = (data: SuiObjectResponse[]) => {
 
         const res = data.map(x => getObjectFields(x));
-        console.log(res);
 
         const results: Record<string, KioskListingValue> = {};
 
         // I don't think we have a type for DynamicField fields (getObjectFields when x is DF)
-        res.map((x: any) => { 
+        res.map((x: any) => {
             results[x?.name?.fields?.id || ''] = {
                 value: x?.value || '',
                 is_exclusive: !!x?.name.fields?.is_exclusive
             }
         });
-
         setKioskListings(results)
     }
 
-
-    const fetchKioskItems = async (itemIds: string[]) => {
-
-        if (itemIds.length === 0) return;
-        const data = await provider.multiGetObjects({
-            ids: itemIds,
-            options: {
-                showType: true,
-                showDisplay: true
-            }
-        });
-        
-        setKioskItems(parseObjectDisplays(data));
-    }
-
     const takeFromKiosk = async (item: OwnedObjectType) => {
-        
+
 
         if (!item?.id || !kioskId || !address) return;
 
@@ -106,9 +81,9 @@ export function KioskItems({ kioskId, kioskOwnerCap, address }: { address: strin
         const obj = take(tx, item.type, kioskId, kioskOwnerCap, item.id);
 
         tx.transferObjects([obj], tx.pure(address));
-        
+
         const success = await signAndExecute({ tx });
-        if(success)  getKioskData();
+        if (success) getKioskData();
     }
 
     const delistFromKiosk = async (item: OwnedObjectType) => {
@@ -119,23 +94,25 @@ export function KioskItems({ kioskId, kioskOwnerCap, address }: { address: strin
         delist(tx, item.type, kioskId, kioskOwnerCap, item.id);
 
         const success = await signAndExecute({ tx });
-        
-        if(success)  getKioskData();
+
+        if (success) getKioskData();
     }
 
     const listToKiosk = async (item: OwnedObjectType, price: string) => {
         if (!kioskId) return;
 
         const tx = new TransactionBlock();
+        
         list(tx, item.type, kioskId, kioskOwnerCap, item.id, price);
+
         await signAndExecute({ tx });
-        console.log(kioskData.itemIds);
+
         getKioskData(); // replace with single kiosk Item search here and replace
         setModalItem(null); // replace modal.
     }
 
 
-    if(loading) return <Loading/>
+    if (loading) return <Loading />
     return (
 
         <div className="mt-12">

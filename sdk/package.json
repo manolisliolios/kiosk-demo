@@ -30,7 +30,7 @@
     "test": "echo \"Error: no test specified\""
   },
   "dependencies": {
-    "@mysten/sui.js": "^0.33.0"
+    "@mysten/sui.js": "^0.34.0"
   },
   "devDependencies": {
     "tsup": "^6.7.0",

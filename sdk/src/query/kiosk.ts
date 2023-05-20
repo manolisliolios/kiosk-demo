@@ -5,7 +5,10 @@ import {
   JsonRpcProvider,
   PaginationArguments,
   SuiAddress,
+  SuiObjectDataOptions,
+  SuiObjectResponse,
 } from '@mysten/sui.js';
+import { extractKioskData, getObjects } from '../utils';
 
 /**
  * A dynamic field `Listing { ID, isExclusive }` attached to the Kiosk.
@@ -45,8 +48,8 @@ export type KioskItem = {
  * Aggregated data from the Kiosk.
  */
 export type KioskData = {
-  items: KioskItem[];
-  listings: KioskListing[];
+  items: KioskItem[] | SuiObjectResponse[];
+  listings: KioskListing[] | SuiObjectResponse[];
   itemIds: string[];
   listingIds: string[];
 };
@@ -57,44 +60,46 @@ export type PagedKioskData = {
   hasNextPage: boolean;
 };
 
+export type FetchKioskOptions = {
+  includeItems?: boolean;
+  itemOptions?: SuiObjectDataOptions;
+  includeListings?: boolean;
+  listingOptions?: SuiObjectDataOptions;
+}
+
+/**
+ * 
+ */
 export async function fetchKiosk(
   provider: JsonRpcProvider,
   kioskId: SuiAddress,
   pagination: PaginationArguments<string>,
+  {
+    includeItems = false,
+    includeListings = false,
+    itemOptions = { showDisplay: true, showType: true },
+    listingOptions = { showContent: true }
+  }: FetchKioskOptions
 ): Promise<PagedKioskData> {
+  provider.multiGetObjects
   const { data, nextCursor, hasNextPage } = await provider.getDynamicFields({
     parentId: kioskId,
     ...pagination,
   });
 
-  const kioskData = data.reduce<KioskData>(
-    (acc, val) => {
-      // ignore package address because sometimes it was 0x2, other 0x000...02
-      const type = val.name.type.split('::').slice(-2).join('::');
-      
-      switch (type) {
-        case 'kiosk::Item':
-          acc.itemIds.push(val.objectId);
-          acc.items.push({
-            itemId: val.objectId,
-            itemType: val.objectType,
-            bcsName: val.bcsName,
-          });
-          break;
-        case 'kiosk::Listing':
-          acc.listingIds.push(val.objectId);
-          acc.listings.push({
-            itemId: val.name.value.id,
-            listingId: val.objectId,
-            isExclusive: val.name.value.is_exclusive,
-            bcsName: val.bcsName,
-          });
-          break;
-      }
-      return acc;
-    },
-    { listings: [], items: [], itemIds: [], listingIds: [] },
-  );
+  // extracted kiosk data.
+  const kioskData = extractKioskData(data);
+
+  // split the fetching in two queries as we are most likely passing different options for each kind.
+  // For items, we usually seek the Display.
+  // For listings we usually seek the DF value (price) / exclusivity.
+  const [itemObjects, listingObjects] = await Promise.all([
+    includeItems ? getObjects(provider, kioskData.itemIds, itemOptions) : Promise.resolve([]),
+    includeListings ? getObjects(provider, kioskData.listingIds, listingOptions) : Promise.resolve([]),
+  ]);
+
+  if (includeItems) kioskData.items = itemObjects;
+  if (includeListings) kioskData.listings = listingObjects;
 
   return {
     data: kioskData,

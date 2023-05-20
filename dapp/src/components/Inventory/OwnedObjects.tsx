@@ -10,6 +10,7 @@ import { parseObjectDisplays } from "../../utils/utils";
 import { useTransactionExecution } from "../../hooks/useTransactionExecution";
 import { place, placeAndList } from "@mysten/kiosk";
 import { ListPrice } from "../Modals/ListPrice";
+import { Loading } from "../Loading";
 
 export type OwnedObjectType = {
     id: string;
@@ -21,6 +22,8 @@ export type OwnedObjectType = {
 export function OwnedObjects({ address, kioskId, kioskOwnerCap }: { address: string } & KioskData): JSX.Element {
 
     const provider = useRpc();
+
+    const [loading, setLoading] = useState<boolean>(false);
 
     const [ownedObjects, setOwnedObjects] = useState<OwnedObjectType[]>([]);
 
@@ -50,13 +53,14 @@ export function OwnedObjects({ address, kioskId, kioskOwnerCap }: { address: str
 
     const getOwnedObjects = async () => {
 
+        setLoading(true);
         const { data }: PaginatedObjectsResponse = await provider.getOwnedObjects({
             owner: address,
             options: {
                 showDisplay: true,
                 showType: true
             }
-        });
+        }).finally(()=> setLoading(false));
 
         if (!data) return;
 
@@ -67,6 +71,9 @@ export function OwnedObjects({ address, kioskId, kioskOwnerCap }: { address: str
     useEffect(() => {
         getOwnedObjects();
     }, [address])
+
+
+    if (loading) return <Loading />
 
     return (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
