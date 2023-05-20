@@ -6,7 +6,7 @@ import { SuiConnectButton } from './components/SuiConnectButton';
 import { useWalletKit } from '@mysten/wallet-kit';
 import { useRpc } from './hooks/useRpc';
 import { KIOSK_OWNER_CAP, createKioskAndShare } from '@mysten/kiosk';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { TransactionBlock, getObjectFields, getObjectId } from '@mysten/sui.js';
 import { useTransactionExecution } from './hooks/useTransactionExecution';
 import { KioskData } from './components/KioskData';

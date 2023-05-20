@@ -8,7 +8,8 @@ import {
   SuiObjectDataOptions,
   SuiObjectResponse,
 } from '@mysten/sui.js';
-import { extractKioskData, getObjects } from '../utils';
+import { extractKioskData, getKioskObject, getObjects } from '../utils';
+import { Kiosk } from '../bcs';
 
 /**
  * A dynamic field `Listing { ID, isExclusive }` attached to the Kiosk.
@@ -52,6 +53,7 @@ export type KioskData = {
   listings: KioskListing[] | SuiObjectResponse[];
   itemIds: string[];
   listingIds: string[];
+  kiosk?: Kiosk;
 };
 
 export type PagedKioskData = {
@@ -61,6 +63,7 @@ export type PagedKioskData = {
 };
 
 export type FetchKioskOptions = {
+  includeKioskFields?: boolean;
   includeItems?: boolean;
   itemOptions?: SuiObjectDataOptions;
   includeListings?: boolean;
@@ -68,18 +71,19 @@ export type FetchKioskOptions = {
 }
 
 /**
- * 
+ *
  */
 export async function fetchKiosk(
   provider: JsonRpcProvider,
   kioskId: SuiAddress,
   pagination: PaginationArguments<string>,
   {
+    includeKioskFields = false,
     includeItems = false,
     includeListings = false,
     itemOptions = { showDisplay: true, showType: true },
     listingOptions = { showContent: true }
-  }: FetchKioskOptions
+  }: FetchKioskOptions,
 ): Promise<PagedKioskData> {
   provider.multiGetObjects
   const { data, nextCursor, hasNextPage } = await provider.getDynamicFields({
@@ -93,11 +97,13 @@ export async function fetchKiosk(
   // split the fetching in two queries as we are most likely passing different options for each kind.
   // For items, we usually seek the Display.
   // For listings we usually seek the DF value (price) / exclusivity.
-  const [itemObjects, listingObjects] = await Promise.all([
+  const [kiosk, itemObjects, listingObjects] = await Promise.all([
+    includeKioskFields ? getKioskObject(provider, kioskId) : Promise.resolve(undefined),
     includeItems ? getObjects(provider, kioskData.itemIds, itemOptions) : Promise.resolve([]),
     includeListings ? getObjects(provider, kioskData.listingIds, listingOptions) : Promise.resolve([]),
   ]);
 
+  if (includeKioskFields) kioskData.kiosk = kiosk;
   if (includeItems) kioskData.items = itemObjects;
   if (includeListings) kioskData.listings = listingObjects;
 

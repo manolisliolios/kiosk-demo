@@ -28,9 +28,7 @@ export function KioskItems({
   address,
 }: { address: string } & LocalKioskDataParams): JSX.Element {
   const provider = useRpc();
-
   const [loading, setLoading] = useState<boolean>(false);
-
   const [kioskData, setKioskData] = useState<KioskData>({
     items: [],
     listings: [],
@@ -59,6 +57,7 @@ export function KioskItems({
       kioskId,
       { limit: 1000 },
       {
+        includeKioskFields: true,
         includeItems: true,
         includeListings: true,
       },
