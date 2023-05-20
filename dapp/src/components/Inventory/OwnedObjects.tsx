@@ -27,11 +27,8 @@ export function OwnedObjects({
   const provider = useRpc();
 
   const [loading, setLoading] = useState<boolean>(false);
-
   const [ownedObjects, setOwnedObjects] = useState<OwnedObjectType[]>([]);
-
   const [modalItem, setModalItem] = useState<OwnedObjectType | null>(null);
-
   const { signAndExecute } = useTransactionExecution();
 
   const placeToKiosk = async (item: OwnedObjectType) => {
