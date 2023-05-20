@@ -5,11 +5,13 @@ import { ConnectButton, useWalletKit } from "@mysten/wallet-kit";
 import { formatAddress } from "@mysten/sui.js";
 
 export function SuiConnectButton() {
-    const { currentAccount } = useWalletKit();
-    return (
-        <ConnectButton
-            connectText={"Connect Wallet"}
-            connectedText={`Connected: ${formatAddress(currentAccount?.address || '')}`}
-        />
-    );
+  const { currentAccount } = useWalletKit();
+  return (
+    <ConnectButton
+      connectText={"Connect Wallet"}
+      connectedText={`Connected: ${formatAddress(
+        currentAccount?.address || ""
+      )}`}
+    />
+  );
 }
