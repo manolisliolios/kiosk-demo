@@ -1,21 +1,21 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { KioskData, delist, fetchKiosk, list, take } from "@mysten/kiosk";
-import { KioskData as LocalKioskDataParams } from "../KioskData";
-import { useRpc } from "../../hooks/useRpc";
-import { useEffect, useState } from "react";
-import { KioskItem as KioskItemCmp } from "./KioskItem";
+import { KioskData, delist, fetchKiosk, list, take } from '@mysten/kiosk';
+import { KioskData as LocalKioskDataParams } from '../KioskData';
+import { useRpc } from '../../hooks/useRpc';
+import { useEffect, useState } from 'react';
+import { KioskItem as KioskItemCmp } from './KioskItem';
 import {
   SuiObjectResponse,
   TransactionBlock,
   getObjectFields,
-} from "@mysten/sui.js";
-import { ListPrice } from "../Modals/ListPrice";
-import { OwnedObjectType } from "../Inventory/OwnedObjects";
-import { parseObjectDisplays } from "../../utils/utils";
-import { useTransactionExecution } from "../../hooks/useTransactionExecution";
-import { Loading } from "../Loading";
+} from '@mysten/sui.js';
+import { ListPrice } from '../Modals/ListPrice';
+import { OwnedObjectType } from '../Inventory/OwnedObjects';
+import { parseObjectDisplays } from '../../utils/utils';
+import { useTransactionExecution } from '../../hooks/useTransactionExecution';
+import { Loading } from '../Loading';
 
 export type KioskListingValue = {
   value: string;
@@ -61,12 +61,12 @@ export function KioskItems({
       {
         includeItems: true,
         includeListings: true,
-      }
+      },
     ); // could also add `cursor` for pagination
 
     setKioskData(res);
     setKioskItems(
-      parseObjectDisplays((res.items as SuiObjectResponse[]) || [])
+      parseObjectDisplays((res.items as SuiObjectResponse[]) || []),
     );
     processKioskListings((res.listings as SuiObjectResponse[]) || []);
     setLoading(false);
@@ -79,8 +79,8 @@ export function KioskItems({
 
     // I don't think we have a type for DynamicField fields (getObjectFields when x is DF)
     res.map((x: any) => {
-      results[x?.name?.fields?.id || ""] = {
-        value: x?.value || "",
+      results[x?.name?.fields?.id || ''] = {
+        value: x?.value || '',
         is_exclusive: !!x?.name.fields?.is_exclusive,
       };
     });

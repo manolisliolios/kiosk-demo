@@ -1,8 +1,8 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { OwnedObjectType } from "./Inventory/OwnedObjects";
-import { KioskListingValue } from "./Kiosk/KioskItems";
+import { OwnedObjectType } from './Inventory/OwnedObjects';
+import { KioskListingValue } from './Kiosk/KioskItems';
 
 export interface DisplayObject {
   listing?: KioskListingValue | null;

@@ -1,10 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Connection, JsonRpcProvider } from "@mysten/sui.js";
+import { Connection, JsonRpcProvider } from '@mysten/sui.js';
 
 const provider = new JsonRpcProvider(
-  new Connection({ fullnode: "https://fullnode.testnet.sui.io:443" })
+  new Connection({ fullnode: 'https://fullnode.testnet.sui.io:443' }),
 );
 
 // const provider = new JsonRpcProvider(new Connection({ fullnode: 'http://localhost:9000' }));

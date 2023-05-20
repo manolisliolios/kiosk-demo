@@ -1,10 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useWalletKit } from "@mysten/wallet-kit";
-import { Tab } from "@headlessui/react";
-import { OwnedObjects } from "./Inventory/OwnedObjects";
-import { KioskItems } from "./Kiosk/KioskItems";
+import { useWalletKit } from '@mysten/wallet-kit';
+import { Tab } from '@headlessui/react';
+import { OwnedObjects } from './Inventory/OwnedObjects';
+import { KioskItems } from './Kiosk/KioskItems';
 
 export type KioskData = {
   kioskOwnerCap: string;
@@ -32,7 +32,7 @@ export function KioskData({
         <div className="flex gap-5 items-center">
           Selected kiosk
           <input
-            defaultValue={kioskId + ""}
+            defaultValue={kioskId + ''}
             disabled
             className="border p-1 rounded-lg"
           />

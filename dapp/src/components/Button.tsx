@@ -1,7 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Spinner } from "./Spinner";
+import { Spinner } from './Spinner';
 
 export function Button({
   children,

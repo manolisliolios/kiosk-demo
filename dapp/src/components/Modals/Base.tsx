@@ -1,14 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { Fragment } from "react";
-import { Dialog, Transition } from "@headlessui/react";
+import { Fragment } from 'react';
+import { Dialog, Transition } from '@headlessui/react';
 
 export function ModalBase({
   isOpen,
   closeModal,
   children,
-  title = "A modal",
+  title = 'A modal',
 }: {
   isOpen: boolean;
   closeModal: () => void;

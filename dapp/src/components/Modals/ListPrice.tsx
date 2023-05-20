@@ -1,11 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from "react";
-import { ModalBase } from "./Base";
-import { OwnedObjectType } from "../Inventory/OwnedObjects";
-import { DisplayObjectThumbnail } from "../DisplayObjectThumbnail";
-import { Button } from "../Button";
+import { useState } from 'react';
+import { ModalBase } from './Base';
+import { OwnedObjectType } from '../Inventory/OwnedObjects';
+import { DisplayObjectThumbnail } from '../DisplayObjectThumbnail';
+import { Button } from '../Button';
 
 export interface ListPriceProps {
   item: OwnedObjectType;
@@ -17,7 +17,7 @@ export function ListPrice({
   onSubmit,
   closeModal,
 }: ListPriceProps): JSX.Element {
-  const [price, setPrice] = useState<string>("");
+  const [price, setPrice] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
   const list = async () => {

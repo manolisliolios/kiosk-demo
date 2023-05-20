@@ -1,13 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { OwnedObjectType } from "../Inventory/OwnedObjects";
-import { DisplayObject } from "../DisplayObject";
-import { KioskListingValue } from "./KioskItems";
-import { useState } from "react";
+import { OwnedObjectType } from '../Inventory/OwnedObjects';
+import { DisplayObject } from '../DisplayObject';
+import { KioskListingValue } from './KioskItems';
+import { useState } from 'react';
 // import { Spinner } from "../Spinner";
-import { actionWithLoader } from "../../utils/buttons";
-import { Button } from "../Button";
+import { actionWithLoader } from '../../utils/buttons';
+import { Button } from '../Button';
 
 export type KioskItemProps = {
   listing?: KioskListingValue | null;

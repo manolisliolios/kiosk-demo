@@ -1,7 +1,7 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { OwnedObjectType } from "./Inventory/OwnedObjects";
+import { OwnedObjectType } from './Inventory/OwnedObjects';
 
 export function DisplayObjectThumbnail({ item }: { item: OwnedObjectType }) {
   return (

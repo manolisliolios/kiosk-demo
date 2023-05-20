@@ -1,14 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useWalletKit } from "@mysten/wallet-kit";
-import { useRpc } from "./useRpc";
+import { useWalletKit } from '@mysten/wallet-kit';
+import { useRpc } from './useRpc';
 import {
   SuiTransactionBlockResponseOptions,
   TransactionBlock,
-} from "@mysten/sui.js";
+} from '@mysten/sui.js';
 
-import { toast } from "react-hot-toast";
+import { toast } from 'react-hot-toast';
 
 // A helper to execute transactions by:
 // 1. Signing them using the wallet
@@ -38,7 +38,7 @@ export function useTransactionExecution() {
 
       return res;
     } catch (e: unknown) {
-      if (typeof e === "string") toast.error(e);
+      if (typeof e === 'string') toast.error(e);
       if (e instanceof Error) toast.error(e.message);
       return false;
     }
