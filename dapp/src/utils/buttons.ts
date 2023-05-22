@@ -1,8 +1,14 @@
-import { OwnedObjectType } from "../components/Inventory/OwnedObjects";
+// Copyright (c) Mysten Labs, Inc.
+// SPDX-License-Identifier: Apache-2.0
 
+import { OwnedObjectType } from '../components/Inventory/OwnedObjects';
 
-export const actionWithLoader = async (fn: (item: OwnedObjectType) => void, item: OwnedObjectType, setLoading: (state: boolean) => void) => {
-    setLoading(true);
-    await fn(item);
-    setLoading(false);
-}
+export const actionWithLoader = async (
+  fn: (item: OwnedObjectType) => void,
+  item: OwnedObjectType,
+  setLoading: (state: boolean) => void,
+) => {
+  setLoading(true);
+  await fn(item);
+  setLoading(false);
+};
