@@ -7,8 +7,10 @@ import {
   SuiAddress,
   SuiObjectDataOptions,
   SuiObjectResponse,
+  bcs,
 } from '@mysten/sui.js';
-import { extractKioskData, getObjects } from '../utils';
+import { extractKioskData, getKioskObject, getObjects } from '../utils';
+import { Kiosk } from '../bcs';
 
 /**
  * A dynamic field `Listing { ID, isExclusive }` attached to the Kiosk.
@@ -24,11 +26,8 @@ export type KioskListing = {
    * TODO: consider renaming the field for better indication.
    */
   isExclusive: boolean;
-
   /** The ID of the listing */
   listingId: string;
-  /** Can be used to query a dynamic field */
-  bcsName: string;
 };
 
 /**
@@ -40,8 +39,6 @@ export type KioskItem = {
   itemId: string;
   /** The type of the Item */
   itemType: string;
-  /** Can be used to query a dynamic field */
-  bcsName: string;
 };
 
 /**
@@ -49,9 +46,10 @@ export type KioskItem = {
  */
 export type KioskData = {
   items: KioskItem[] | SuiObjectResponse[];
-  listings: KioskListing[] | SuiObjectResponse[];
+  listings: KioskListing[];
   itemIds: string[];
   listingIds: string[];
+  kiosk?: Kiosk;
 };
 
 export type PagedKioskData = {
@@ -61,27 +59,28 @@ export type PagedKioskData = {
 };
 
 export type FetchKioskOptions = {
+  includeKioskFields?: boolean;
   includeItems?: boolean;
   itemOptions?: SuiObjectDataOptions;
-  includeListings?: boolean;
+  withListingPrices?: boolean;
   listingOptions?: SuiObjectDataOptions;
-}
+};
 
 /**
- * 
+ *
  */
 export async function fetchKiosk(
   provider: JsonRpcProvider,
   kioskId: SuiAddress,
   pagination: PaginationArguments<string>,
   {
+    includeKioskFields = false,
     includeItems = false,
-    includeListings = false,
+    withListingPrices = false,
     itemOptions = { showDisplay: true, showType: true },
-    listingOptions = { showContent: true }
-  }: FetchKioskOptions
+  }: FetchKioskOptions,
 ): Promise<PagedKioskData> {
-  provider.multiGetObjects
+  provider.multiGetObjects;
   const { data, nextCursor, hasNextPage } = await provider.getDynamicFields({
     parentId: kioskId,
     ...pagination,
@@ -93,13 +92,24 @@ export async function fetchKiosk(
   // split the fetching in two queries as we are most likely passing different options for each kind.
   // For items, we usually seek the Display.
   // For listings we usually seek the DF value (price) / exclusivity.
-  const [itemObjects, listingObjects] = await Promise.all([
-    includeItems ? getObjects(provider, kioskData.itemIds, itemOptions) : Promise.resolve([]),
-    includeListings ? getObjects(provider, kioskData.listingIds, listingOptions) : Promise.resolve([]),
+  const [kiosk, itemObjects, listingObjects] = await Promise.all([
+    includeKioskFields
+      ? getKioskObject(provider, kioskId)
+      : Promise.resolve(undefined),
+    includeItems
+      ? getObjects(provider, kioskData.itemIds, itemOptions)
+      : Promise.resolve([]),
+    withListingPrices
+      ? getObjects(provider, kioskData.listingIds, { showBcs: true })
+      : Promise.resolve([]),
   ]);
 
+  if (includeKioskFields) kioskData.kiosk = kiosk;
   if (includeItems) kioskData.items = itemObjects;
-  if (includeListings) kioskData.listings = listingObjects;
+  if (withListingPrices) kioskData.listings.map((l, i) => {
+    // @ts-ignore // until type definitions are updated in TS SDK;
+    l.price = bcs.de('u64', listingObjects[i].data?.bcs.bcsBytes, 'base64');
+  });
 
   return {
     data: kioskData,

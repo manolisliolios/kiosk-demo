@@ -5,6 +5,11 @@ import { useWalletKit } from '@mysten/wallet-kit';
 import { Tab } from '@headlessui/react';
 import { OwnedObjects } from './Inventory/OwnedObjects';
 import { KioskItems } from './Kiosk/KioskItems';
+import { Kiosk, getKioskObject } from '@mysten/kiosk';
+import { useEffect, useState } from 'react';
+import { useRpc } from '../hooks/useRpc';
+import { formatAddress } from '@mysten/sui.js';
+import { ExplorerLink } from './ExplorerLink';
 
 export type KioskData = {
   kioskOwnerCap: string;
@@ -17,7 +22,15 @@ export function KioskData({
   kioskId,
   setSelectedKiosk,
 }: KioskData) {
+  const provider = useRpc();
   const { currentAccount } = useWalletKit();
+  const [kiosk, setKiosk] = useState<Kiosk | undefined>(undefined);
+
+  useEffect(() => {
+    if (!kiosk && kioskId) {
+      getKioskObject(provider, kioskId).then((res) => setKiosk(res));
+    }
+  }, [kioskId]);
 
   return (
     <div className="container py-12 min-h-[80vh]">
@@ -29,21 +42,32 @@ export function KioskData({
       </button>
 
       <div className="mb-12 ">
-        <div className="flex gap-5 items-center">
-          Selected kiosk
-          <input
-            defaultValue={kioskId + ''}
-            disabled
-            className="border p-1 rounded-lg"
-          />
-        </div>
-        <a
-          href={`https://suiexplorer.com/object/${kioskId}?network=testnet`}
-          target="_blank"
-          className="block underline"
-        >
-          View on explorer
-        </a>
+        {kiosk && (
+          <div className="gap-5 items-center">
+            <div>
+              Selected Kiosk:{' '}
+              {
+                <ExplorerLink
+                  text={formatAddress(kiosk.id)}
+                  object={kiosk.id}
+                />
+              }
+            </div>
+            <div className="mt-2">
+              Owner (displayed): (
+              <ExplorerLink
+                text={formatAddress(kiosk.owner)}
+                address={kiosk.owner}
+              />
+              )
+            </div>
+            <div className="mt-2">Items Count: {kiosk.itemCount}</div>
+            <div className="mt-2">Profits: {kiosk.profits} MIST</div>
+            <div className="mt-2">
+              UID Exposed: {kiosk.allowExtensions.toString()}{' '}
+            </div>
+          </div>
+        )}
       </div>
 
       <Tab.Group vertical defaultIndex={0}>

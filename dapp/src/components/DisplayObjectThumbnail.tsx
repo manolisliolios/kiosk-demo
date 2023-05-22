@@ -14,10 +14,8 @@ export function DisplayObjectThumbnail({ item }: { item: OwnedObjectType }) {
       </div>
       <div>
         <label>Selected Item</label>
-        <p>
-          {item.display.name}
-          {item.display.description}
-        </p>
+        <p>Name: {item.display.name}</p>
+        <p>Description: {item.display.description}</p>
       </div>
     </div>
   );

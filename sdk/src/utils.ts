@@ -11,6 +11,7 @@ import {
 } from '@mysten/sui.js';
 import { KioskData } from './query/kiosk';
 import { DynamicFieldInfo } from '@mysten/sui.js/dist/types/dynamic_fields';
+import { bcs, Kiosk } from './bcs';
 
 /**
  * A valid argument for any of the Kiosk functions.
@@ -51,8 +52,22 @@ export function objArg(
   throw new Error('Invalid argument type');
 }
 
+export async function getKioskObject(
+  provider: JsonRpcProvider,
+  id: string,
+): Promise<Kiosk> {
+  const queryRes = await provider.getObject({ id, options: { showBcs: true } });
+
+  if (!queryRes || queryRes.error || !queryRes.data) {
+    throw new Error(`Kiosk ${id} not found; ${queryRes.error}`);
+  }
+
+  // @ts-ignore // needs a fix in TS SDK types
+  return bcs.de('Kiosk', queryRes.data.bcs!.bcsBytes, 'base64');
+}
+
 // helper to extract kiosk data from dynamic fields.
-export const extractKioskData = (data: DynamicFieldInfo[]): KioskData => {
+export function extractKioskData(data: DynamicFieldInfo[]): KioskData {
   return data.reduce<KioskData>(
     (acc: KioskData, val: DynamicFieldInfo) => {
       // e.g. 0x2::kiosk::Item -> kiosk::Item
@@ -64,7 +79,6 @@ export const extractKioskData = (data: DynamicFieldInfo[]): KioskData => {
           acc.items.push({
             itemId: val.objectId,
             itemType: val.objectType,
-            bcsName: val.bcsName,
           });
           break;
         case 'kiosk::Listing':
@@ -73,7 +87,6 @@ export const extractKioskData = (data: DynamicFieldInfo[]): KioskData => {
             itemId: val.name.value.id,
             listingId: val.objectId,
             isExclusive: val.name.value.is_exclusive,
-            bcsName: val.bcsName,
           });
           break;
       }
@@ -83,14 +96,15 @@ export const extractKioskData = (data: DynamicFieldInfo[]): KioskData => {
   );
 }
 
-
 // simple multiGetObjects wrapper to simplify cases on functions.
-export const getObjects = async (provider: JsonRpcProvider, ids: string[], options: SuiObjectDataOptions) => {
+export function getObjects(
+  provider: JsonRpcProvider,
+  ids: string[],
+  options: SuiObjectDataOptions,
+) {
+  if (ids.length === 0) {
+    return [];
+  }
 
-  if (ids.length === 0) return [];
-
-  return await provider.multiGetObjects({
-    ids,
-    options
-  });
+  return provider.multiGetObjects({ ids, options });
 }
