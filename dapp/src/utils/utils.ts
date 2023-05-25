@@ -24,3 +24,19 @@ export const parseObjectDisplays = (
     })
     .filter((x) => !!x.display && !!x.display.image_url);
 };
+
+
+
+export const localStorageKeys = {
+  LAST_VISITED_KIOSK_ID: 'LAST_VISITED_KIOSK_ID',
+  USER_KIOSK_OWNER_CAP: 'USER_KIOSK_OWNER_CAP',
+  USER_KIOSK_ID: 'USER_KIOSK'
+}
+
+export const getOwnedKiosk = (): string | null => {
+  return localStorage.getItem(localStorageKeys.USER_KIOSK_ID) || null;
+}
+
+export const getOwnedKioskCap = (): string | null => {
+  return localStorage.getItem(localStorageKeys.USER_KIOSK_OWNER_CAP) || null;
+}

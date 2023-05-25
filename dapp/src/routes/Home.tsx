@@ -1,28 +1,28 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import './App.css';
-import { SuiConnectButton } from './components/SuiConnectButton';
+import { SuiConnectButton } from '../components/SuiConnectButton';
 import { useWalletKit } from '@mysten/wallet-kit';
-import { useRpc } from './hooks/useRpc';
+import { useRpc } from '../hooks/useRpc';
 import { KIOSK_OWNER_CAP, createKioskAndShare } from '@mysten/kiosk';
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TransactionBlock, getObjectFields, getObjectId } from '@mysten/sui.js';
-import { useTransactionExecution } from './hooks/useTransactionExecution';
-import { KioskData } from './components/KioskData';
-import { Loading } from './components/Loading';
+import { useTransactionExecution } from '../hooks/useTransactionExecution';
+import { KioskData } from '../components/KioskData';
+import { Loading } from '../components/Loading';
+import FindKiosk from '../components/Kiosk/FindKiosk';
+import { localStorageKeys } from '../utils/utils';
 
-function App() {
+function Home() {
   const { currentAccount } = useWalletKit();
   const [kioskIds, setKioskIds] = useState<string[]>([]);
-  const [kioskOwnerCaps, setKioskOwnerCaps] = useState<string[]>([]);
   const [loadingCap, setLoadingCap] = useState<boolean>(false);
   const { signAndExecute } = useTransactionExecution();
   const [kioskId, setKioskId] = useState<string | null>(null);
   const provider = useRpc();
 
   const findUserKiosks = async () => {
-    if (!currentAccount?.address) return;
+    if (!currentAccount?.address) return; 
 
     setLoadingCap(true);
 
@@ -34,10 +34,16 @@ function App() {
         showContent: true,
       },
     });
+    
+    const kioskIdList = kiosks?.data?.map((x) => getObjectFields(x)?.for)
+    setKioskIds(kioskIdList);
 
-    setKioskIds(kiosks?.data?.map((x) => getObjectFields(x)?.for));
-    setKioskOwnerCaps(kiosks?.data.map((x) => getObjectId(x)));
+    const kioskOwnerCaps = kiosks?.data.map((x) => getObjectId(x));
 
+
+    // save to localStorage for easy retrieval throughout the app.
+    localStorage.setItem(localStorageKeys.USER_KIOSK_ID, kioskIdList[0]);
+    localStorage.setItem(localStorageKeys.USER_KIOSK_OWNER_CAP, kioskOwnerCaps[0]);
     setLoadingCap(false);
   };
 
@@ -69,7 +75,12 @@ function App() {
         {!kioskId && (
           <div className=" mb-12 min-h-screen flex items-center justify-center">
             <div>
-              <SuiConnectButton></SuiConnectButton>
+
+
+              <FindKiosk></FindKiosk>
+              <div className="flex justify-center">
+                <SuiConnectButton></SuiConnectButton>
+              </div>
 
               {loadingCap && <Loading />}
 
@@ -102,13 +113,7 @@ function App() {
           </div>
         )}
 
-        {kioskId && (
-          <KioskData
-            kioskOwnerCap={kioskOwnerCaps[0]}
-            kioskId={kioskId}
-            setSelectedKiosk={setKioskId}
-          />
-        )}
+        {kioskId && <KioskData setSelectedKiosk={setKioskId} />}
       </div>
 
       <div className="mt-6 border-t border-primary text-center py-6">
@@ -118,4 +123,4 @@ function App() {
   );
 }
 
-export default App;
+export default Home;

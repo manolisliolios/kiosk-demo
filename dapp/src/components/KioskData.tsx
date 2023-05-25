@@ -6,25 +6,30 @@ import { Tab } from '@headlessui/react';
 import { OwnedObjects } from './Inventory/OwnedObjects';
 import { KioskItems } from './Kiosk/KioskItems';
 import { Kiosk, getKioskObject } from '@mysten/kiosk';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRpc } from '../hooks/useRpc';
 import { formatAddress } from '@mysten/sui.js';
 import { ExplorerLink } from './ExplorerLink';
+import { getOwnedKiosk, getOwnedKioskCap } from '../utils/utils';
 
 export type KioskData = {
-  kioskOwnerCap: string;
-  kioskId: string | null;
   setSelectedKiosk?: (address: string | null) => void;
 };
 
 export function KioskData({
-  kioskOwnerCap,
-  kioskId,
   setSelectedKiosk,
 }: KioskData) {
   const provider = useRpc();
   const { currentAccount } = useWalletKit();
   const [kiosk, setKiosk] = useState<Kiosk | undefined>(undefined);
+
+  const kioskId = useMemo(()=>{
+    return getOwnedKiosk() || '';
+  }, [])
+
+  const kioskOwnerCap = useMemo(()=>{
+    return getOwnedKioskCap() || '';
+  }, []);
 
   useEffect(() => {
     if (!kiosk && kioskId) {

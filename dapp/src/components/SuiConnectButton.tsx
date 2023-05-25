@@ -8,10 +8,12 @@ export function SuiConnectButton() {
   const { currentAccount } = useWalletKit();
   return (
     <ConnectButton
+    className='mx-auto'
       connectText={'Connect Wallet'}
       connectedText={`Connected: ${formatAddress(
         currentAccount?.address || '',
       )}`}
+      
     />
   );
 }

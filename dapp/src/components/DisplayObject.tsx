@@ -1,13 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import { ReactElement } from 'react';
 import { OwnedObjectType } from './Inventory/OwnedObjects';
-import { KioskListingValue } from './Kiosk/KioskItems';
+import { KioskListing } from '@mysten/kiosk';
 
 export interface DisplayObject {
-  listing?: KioskListingValue | null;
+  listing?: KioskListing | null;
   item: OwnedObjectType;
-  children: JSX.Element | JSX.Element[] | string;
+  children: ReactElement | false;
 }
 
 export function DisplayObject({
@@ -36,7 +37,7 @@ export function DisplayObject({
 
       {listing && (
         <div className="absolute left-2 top-2 bg-gray-200 px-2 py-1 rounded-2xl">
-          {listing.value} SUI
+          {listing.price} SUI
         </div>
       )}
 

@@ -7,7 +7,7 @@ import {
   SuiAddress,
   SuiObjectDataOptions,
   SuiObjectResponse,
-  bcs,
+  getObjectFields,
 } from '@mysten/sui.js';
 import { extractKioskData, getKioskObject, getObjects } from '../utils';
 import { Kiosk } from '../bcs';
@@ -28,6 +28,8 @@ export type KioskListing = {
   isExclusive: boolean;
   /** The ID of the listing */
   listingId: string;
+  /** (optional) the price of the listing */
+  price?: string;
 };
 
 /**
@@ -80,7 +82,6 @@ export async function fetchKiosk(
     itemOptions = { showDisplay: true, showType: true },
   }: FetchKioskOptions,
 ): Promise<PagedKioskData> {
-  provider.multiGetObjects;
   const { data, nextCursor, hasNextPage } = await provider.getDynamicFields({
     parentId: kioskId,
     ...pagination,
@@ -100,15 +101,19 @@ export async function fetchKiosk(
       ? getObjects(provider, kioskData.itemIds, itemOptions)
       : Promise.resolve([]),
     withListingPrices
-      ? getObjects(provider, kioskData.listingIds, { showBcs: true })
+      ? getObjects(provider, kioskData.listingIds, { showBcs: true, showContent: true })
       : Promise.resolve([]),
   ]);
 
   if (includeKioskFields) kioskData.kiosk = kiosk;
   if (includeItems) kioskData.items = itemObjects;
   if (withListingPrices) kioskData.listings.map((l, i) => {
+
+    const fields = getObjectFields(listingObjects[i]);
     // @ts-ignore // until type definitions are updated in TS SDK;
-    l.price = bcs.de('u64', listingObjects[i].data?.bcs.bcsBytes, 'base64');
+    // Skipped the bcs deserialization for now, as it was not being parsed properly.
+    // l.price = bcs.de('u64', listingObjects[i].data?.bcs.bcsBytes, 'base64').toString();
+    l.price = fields?.value;
   });
 
   return {

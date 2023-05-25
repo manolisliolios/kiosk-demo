@@ -4,7 +4,7 @@
 import { OwnedObjectType } from '../components/Inventory/OwnedObjects';
 
 export const actionWithLoader = async (
-  fn: (item: OwnedObjectType) => void,
+  fn: (item: OwnedObjectType, price?:string) => void,
   item: OwnedObjectType,
   setLoading: (state: boolean) => void,
 ) => {

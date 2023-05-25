@@ -2,15 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-    JsonRpcProvider,
-    // PaginationArguments,
-    // SuiAddress,
-    // SuiObjectDataOptions,
-    // SuiObjectResponse,
-    // bcs,
+    JsonRpcProvider
 } from '@mysten/sui.js';
 
-import { bcs } from './../bcs';
+import { TransferPolicy, bcs } from './../bcs';
 
 /** Name of the event emitted when a TransferPolicy for T is created. */
 export const TRANSFER_POLICY_CREATED_EVENT = `0x2::transfer_policy::TransferPolicyCreated`;
@@ -20,8 +15,8 @@ export const TRANSFER_POLICY_CREATED_EVENT = `0x2::transfer_policy::TransferPoli
  * @param provider
  * @param type
  */
-export async function queryTransferPolicy(provider: JsonRpcProvider, type: string) {
-    console.log('event type: %s', `${TRANSFER_POLICY_CREATED_EVENT}<${type}>`);
+export async function queryTransferPolicy(provider: JsonRpcProvider, type: string): Promise<TransferPolicy[]> {
+    // console.log('event type: %s', `${TRANSFER_POLICY_CREATED_EVENT}<${type}>`);
     const { data } = await provider.queryEvents({
         query: {
             MoveEventType: `${TRANSFER_POLICY_CREATED_EVENT}<${type}>`
@@ -39,8 +34,6 @@ export async function queryTransferPolicy(provider: JsonRpcProvider, type: strin
         return search.data;
     }));
 
-    console.log(policies);
-
     return policies
         .filter((policy) => policy !== null)
         .map((policy) => { // @ts-ignore // until bcs definition is fixed
@@ -48,10 +41,11 @@ export async function queryTransferPolicy(provider: JsonRpcProvider, type: strin
 
             return {
                 // ...policy, // @ts-ignore // until bcs definition is fixed
+                id: policy?.objectId,
                 type: `0x2::transfer_policy::TransferPolicy<${type}>`,
                 owner: policy?.owner,
                 rules: parsed.rules,
                 balance: parsed.balance,
-            }
+            } as TransferPolicy
         });
 }

@@ -66,12 +66,16 @@ export async function getKioskObject(
   return bcs.de('Kiosk', queryRes.data.bcs!.bcsBytes, 'base64');
 }
 
+export const getTypeWithoutPackageAddress = (type: string) => {
+  return type.split('::').slice(-2).join('::');
+}
+
 // helper to extract kiosk data from dynamic fields.
 export function extractKioskData(data: DynamicFieldInfo[]): KioskData {
   return data.reduce<KioskData>(
     (acc: KioskData, val: DynamicFieldInfo) => {
       // e.g. 0x2::kiosk::Item -> kiosk::Item
-      const type = val.name.type.split('::').slice(-2).join('::');
+      const type = getTypeWithoutPackageAddress(val.name.type)
 
       switch (type) {
         case 'kiosk::Item':
