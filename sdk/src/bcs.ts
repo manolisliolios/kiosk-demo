@@ -58,12 +58,12 @@ export type TransferPolicy = {
   balance: string;
   rules: string[];
   owner?: string;
-}
+};
 
 bcs.registerStructType('TransferPolicy', {
   id: 'address',
   balance: 'u64',
-  rules: ['vector', 'string']
+  rules: ['vector', 'string'],
 });
 
 export { bcs };
