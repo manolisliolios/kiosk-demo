@@ -1,17 +1,16 @@
+// Copyright (c) Mysten Labs, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App.tsx';
 import './index.css';
 
-import { Toaster } from 'react-hot-toast';
+import { RouterProvider } from 'react-router-dom';
 
-import { WalletKitProvider } from '@mysten/wallet-kit';
+import { router } from './routes';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <WalletKitProvider>
-      <App />
-      <Toaster position="top-center" />
-    </WalletKitProvider>
+    <RouterProvider router={router} />
   </React.StrictMode>,
 );

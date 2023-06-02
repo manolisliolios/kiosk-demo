@@ -3,7 +3,6 @@
 
 module.exports = {
   root: true,
-  plugins: ['unused-imports'],
   extends: ['react-app', 'prettier', 'plugin:prettier/recommended'],
   rules: {
     'no-implicit-coercion': [2, { number: true, string: true, boolean: false }],
@@ -24,17 +23,6 @@ module.exports = {
         name: 'Buffer',
         message:
           'Buffer usage increases bundle size and is not consistently implemented on web.',
-      },
-    ],
-    'no-unused-vars': 'off', // or "@typescript-eslint/no-unused-vars": "off",
-    'unused-imports/no-unused-imports': 'error',
-    'unused-imports/no-unused-vars': [
-      'warn',
-      {
-        vars: 'all',
-        varsIgnorePattern: '^_',
-        args: 'after-used',
-        argsIgnorePattern: '^_',
       },
     ],
   },

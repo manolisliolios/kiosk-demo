@@ -1,13 +1,16 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import { ReactElement } from 'react';
 import { OwnedObjectType } from './Inventory/OwnedObjects';
-import { KioskListingValue } from './Kiosk/KioskItems';
+import { KioskListing } from '@mysten/kiosk';
+import { useWalletKit } from '@mysten/wallet-kit';
+import { formatSui, mistToSui } from '../utils/utils';
 
 export interface DisplayObject {
-  listing?: KioskListingValue | null;
+  listing?: KioskListing | null;
   item: OwnedObjectType;
-  children: JSX.Element | JSX.Element[] | string;
+  children: ReactElement | false;
 }
 
 export function DisplayObject({
@@ -15,33 +18,46 @@ export function DisplayObject({
   listing = null,
   children,
 }: DisplayObject): JSX.Element {
+  const { currentAccount } = useWalletKit();
+
+  const price = formatSui(mistToSui(listing?.price));
+
   return (
-    <div className="border relative border-primary p-4 text-center flex justify-between flex-col rounded-xl">
-      <div className="h-[200px] overflow-hidden bg-gray-50">
+    <div className="border relative border-primary overflow-hidden text-center flex justify-between flex-col rounded-lg">
+      <div className="h-[275px] xl:h-[200px] overflow-hidden bg-gray-50">
         <img
           src={item.display.image_url}
-          className="object-contain h-full w-full md:max-w-[50%] mx-auto"
+          className="object-cover aspect-auto h-full w-full mx-auto"
+          alt="The display of the object"
         ></img>
       </div>
 
-      {item.display.name && (
-        <h3 className="text-clip overflow-hidden">{item.display.name}</h3>
-      )}
+      <div className="p-4">
+        {item.display.name && (
+          <h3 className="text-clip overflow-hidden">{item.display.name}</h3>
+        )}
 
-      {item.display.description && (
-        <p className="text-sm opacity-80 text-clip overflow-hidden">
-          {item.display.description}
-        </p>
-      )}
+        {item.display.description && (
+          <p className="text-sm opacity-80 text-clip overflow-hidden">
+            {item.display.description}
+          </p>
+        )}
 
-      {listing && (
-        <div className="absolute left-2 top-2 bg-gray-200 px-2 py-1 rounded-2xl">
-          {listing.value} SUI
-        </div>
-      )}
+        {listing && listing.price && (
+          <div className="absolute left-2 top-2 bg-black text-white px-2 py-1 rounded-lg">
+            {price} SUI
+          </div>
+        )}
 
-      {/* button actions */}
-      <div className="grid lg:grid-cols-2 gap-5 mt-6">{children}</div>
+        {/* button actions */}
+        {currentAccount?.address ? (
+          <div className="grid lg:grid-cols-2 gap-5 mt-6">{children}</div>
+        ) : (
+          <div className="mt-6 text-xs">
+            Connect your wallet to purchase or manage.
+          </div>
+        )}
+      </div>
     </div>
   );
 }

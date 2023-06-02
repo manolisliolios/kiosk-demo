@@ -2,10 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { TransactionArgument, TransactionBlock } from '@mysten/sui.js';
-import { ObjectArgument, objArg } from '../utils';
-
-/** The Transfer Policy module. */
-export const TRANSFER_POLICY_MODULE = '0x2::transfer_policy';
+import { getRulePackageAddress, objArg } from '../utils';
+import { lock } from './kiosk';
+import {
+  ObjectArgument,
+  RulesEnvironmentParam,
+  TRANSFER_POLICY_MODULE,
+} from '../types';
 
 /**
  * Call the `transfer_policy::new` function to create a new transfer policy.
@@ -87,5 +90,63 @@ export function removeTransferPolicyRule(
     target: `${TRANSFER_POLICY_MODULE}::remove_rule`,
     typeArguments: [itemType, ruleType, configType],
     arguments: [objArg(tx, policy), policyCap],
+  });
+}
+
+/**
+ * Calculates the amount to be paid for the royalty rule to be resolved,
+ * splits the coin to pass the exact amount,
+ * then calls the `royalty_rule::pay` function to resolve the royalty rule.
+ */
+export function resolveRoyaltyRule(
+  tx: TransactionBlock,
+  itemType: string,
+  price: string,
+  policyId: ObjectArgument,
+  transferRequest: TransactionArgument,
+  environment: RulesEnvironmentParam,
+) {
+  const policyObj = objArg(tx, policyId);
+  // calculates the amount
+  const [amount] = tx.moveCall({
+    target: `${getRulePackageAddress(environment)}::royalty_rule::fee_amount`,
+    typeArguments: [itemType],
+    arguments: [policyObj, objArg(tx, price)],
+  });
+
+  // splits the coin.
+  const feeCoin = tx.splitCoins(tx.gas, [amount]);
+
+  // pays the policy
+  tx.moveCall({
+    target: `${getRulePackageAddress(environment)}::royalty_rule::pay`,
+    typeArguments: [itemType],
+    arguments: [policyObj, transferRequest, feeCoin],
+  });
+}
+
+/**
+ * Locks the item in the supplied kiosk and
+ * proves to the `kiosk_lock` rule that the item was indeed locked,
+ * by calling the `kiosk_lock_rule::prove` function to resolve it.
+ */
+export function resolveKioskLockRule(
+  tx: TransactionBlock,
+  itemType: string,
+  item: TransactionArgument,
+  kiosk: ObjectArgument,
+  kioskCap: ObjectArgument,
+  policyId: ObjectArgument,
+  transferRequest: TransactionArgument,
+  environment: RulesEnvironmentParam,
+) {
+  // lock item in the kiosk.
+  lock(tx, itemType, kiosk, kioskCap, policyId, item);
+
+  // proves that the item is locked in the kiosk to the TP.
+  tx.moveCall({
+    target: `${getRulePackageAddress(environment)}::kiosk_lock_rule::prove`,
+    typeArguments: [itemType],
+    arguments: [transferRequest, objArg(tx, kiosk)],
   });
 }
