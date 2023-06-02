@@ -5,7 +5,6 @@
 		"app": "pnpm --filter ./dapp",
 		"sdk": "pnpm --filter ./sdk",
 		"cli": "pnpm --filter ./cli",
-		"prepare": "pnpm sdk install && pnpm sdk build && pnpm app install",
-		"deployment": "pnpm prepare && pnpm app build"
+		"prepare": "pnpm sdk install && pnpm sdk build && pnpm app install"
 	}
 }
