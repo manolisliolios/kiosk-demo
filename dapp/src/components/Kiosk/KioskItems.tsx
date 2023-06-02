@@ -74,33 +74,41 @@ export function KioskItems({
     if (!kioskId) return;
     setLoading(true);
 
-    const { data: res } = await fetchKiosk(
-      provider,
-      kioskId,
-      { limit: 1000 },
-      {
-        withKioskFields: true,
-        withListingPrices: true,
-      },
-    ); // could also add `cursor` for pagination
-    // get items.
-    const items = await provider.multiGetObjects({
-      ids: res.itemIds,
-      options: { showDisplay: true, showType: true },
-    });
+    try {
+      const { data: res } = await fetchKiosk(
+        provider,
+        kioskId,
+        { limit: 1000 },
+        {
+          withKioskFields: true,
+          withListingPrices: true,
+        },
+      ); // could also add `cursor` for pagination
+      // get items.
+      const items = await provider.multiGetObjects({
+        ids: res.itemIds,
+        options: { showDisplay: true, showType: true },
+      });
 
-    localStorage.setItem(localStorageKeys.LAST_VISITED_KIOSK_ID, kioskId);
+      localStorage.setItem(localStorageKeys.LAST_VISITED_KIOSK_ID, kioskId);
 
-    const displays = parseObjectDisplays(items) || {};
-    const ownedItems = res.items.map((item: KioskItem) => {
-      return {
-        ...item,
-        display: displays[item.objectId] || {},
-      };
-    });
-    setKioskItems(ownedItems);
-    processKioskListings(res.items.map((x) => x.listing) as KioskListing[]);
-    setLoading(false);
+      const displays = parseObjectDisplays(items) || {};
+      const ownedItems = res.items.map((item: KioskItem) => {
+        return {
+          ...item,
+          display: displays[item.objectId] || {},
+        };
+      });
+      setKioskItems(ownedItems);
+      processKioskListings(res.items.map((x) => x.listing) as KioskListing[]);
+    } catch (e) {
+      setKioskItems([]);
+      toast.error(
+        'Something went wrong. Either this is not a valid kiosk address, or the RPC call failed.',
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const processKioskListings = (data: KioskListing[]) => {
@@ -206,6 +214,10 @@ export function KioskItems({
   };
 
   if (loading) return <Loading />;
+
+  if (kioskItems.length === 0)
+    return <div className="py-12">The kiosk you are viewing is empty!</div>;
+
   return (
     <div className="mt-12">
       {

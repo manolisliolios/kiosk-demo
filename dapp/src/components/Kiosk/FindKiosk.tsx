@@ -1,5 +1,6 @@
 import { FormEvent, ReactElement, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import classnames from 'classnames';
 
 export default function FindKiosk(): ReactElement {
   const [searchKiosk, setSearchKioskId] = useState<string>('');
@@ -22,9 +23,11 @@ export default function FindKiosk(): ReactElement {
     setSearchKioskId(e.target.value);
   };
 
+  const canSearch = !(kioskId === searchKiosk || !isObjectIdInput(searchKiosk));
+
   return (
     <form onSubmit={viewKiosk} className="text-center lg:min-w-[700px]">
-      <div className="flex items-center gap-1 bg-gray-100 border rounded border-gray-300 overflow-hidden">
+      <div className="flex items-center bg-gray-100 border rounded border-gray-300 overflow-hidden">
         <div className="basis-10/12">
           <input
             type="text"
@@ -32,7 +35,8 @@ export default function FindKiosk(): ReactElement {
             role="search"
             value={searchKiosk}
             onInput={onInput}
-            className="bg-gray-100 border lg:min-w-[600px] text-gray-900 placeholder:text-gray-500 text-sm rounded focus:ring-primary 
+            className="bg-gray-100 border lg:min-w-[600px] text-gray-900 placeholder:text-gray-500 text-sm rounded rounded-r-none
+             focus:ring-transparent 
             focus:border-primary block w-full p-2.5 outline-primary"
             placeholder="Search for a kiosk..."
             required
@@ -40,8 +44,11 @@ export default function FindKiosk(): ReactElement {
         </div>
         <button
           type="submit"
-          className="basis-2/12 w-full h-full text-black text-xs mx-auto disabled:opacity-60"
-          disabled={kioskId === searchKiosk || !isObjectIdInput(searchKiosk)}
+          className={classnames(
+            'basis-2/12 w-full h-[42px] text-primary text-xs mx-auto disabled:opacity-60 !rounded-l-none',
+            canSearch && 'bg-primary !text-white',
+          )}
+          disabled={!canSearch}
         >
           Visit
         </button>

@@ -8,13 +8,13 @@ import { Header } from './components/Base/Header';
 
 export default function Root() {
   return (
-    <WalletKitProvider enableUnsafeBurner={import.meta.env.DEV}>
+    <WalletKitProvider>
       <Header></Header>
       <div className="min-h-[80vh]">
         <Outlet />
       </div>
       <div className="mt-6 border-t border-primary text-center py-6">
-        Copyright © 2023 by Mysten Labs
+        Copyright © Mysten Labs, Inc.
       </div>
       <Toaster position="bottom-center" />
     </WalletKitProvider>

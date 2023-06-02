@@ -18,7 +18,10 @@ export function SuiConnectButton() {
 
   return (
     <ConnectButton
-      className="mx-auto !shadow-none"
+      style={{
+        backgroundColor: '#101827',
+      }}
+      className="mx-auto !shadow-none bg-primary"
       connectText={'Connect Wallet'}
       connectedText={`Connected: ${formatAddress(
         currentAccount?.address || '',
