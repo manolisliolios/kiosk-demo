@@ -16,6 +16,7 @@ export function SuiConnectButton() {
     navigate('/');
   }, [navigate, currentAccount?.address]);
 
+  //@ts-ignore
   return (
     <ConnectButton
       style={{
