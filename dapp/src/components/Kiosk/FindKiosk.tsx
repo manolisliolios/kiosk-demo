@@ -19,10 +19,7 @@ export default function FindKiosk(): ReactElement {
     val?.length === 66 || val?.length === 64;
 
   const onInput = (e: any) => {
-    const kioskId = e.target.value;
     setSearchKioskId(e.target.value);
-    // we accept both 0x prefix or without.
-    // if(isObjectIdInput(kioskId)) viewKiosk();
   };
 
   return (

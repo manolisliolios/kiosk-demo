@@ -10,6 +10,7 @@ export function DisplayObjectThumbnail({ item }: { item: OwnedObjectType }) {
         <img
           src={item.display.image_url}
           className="object-contain object-center w-full h-full"
+          alt="Thumbnail of the object"
         ></img>
       </div>
       <div>

@@ -2,9 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useEffect, useMemo, useState } from 'react';
-import { PaginatedObjectsResponse, TransactionBlock } from '@mysten/sui.js';
+import {
+  PaginatedObjectsResponse,
+  TransactionBlock,
+  getObjectId,
+  getObjectType,
+} from '@mysten/sui.js';
 import { OwnedObject } from './OwnedObject';
-import { KioskData } from '../KioskData';
+import { KioskData } from '../Kiosk/KioskData';
 import { useRpc } from '../../hooks/useRpc';
 import {
   getOwnedKiosk,
@@ -12,15 +17,12 @@ import {
   parseObjectDisplays,
 } from '../../utils/utils';
 import { useTransactionExecution } from '../../hooks/useTransactionExecution';
-import { KioskListing, place, placeAndList } from '@mysten/kiosk';
+import { KioskItem, place, placeAndList } from '@mysten/kiosk';
 import { ListPrice } from '../Modals/ListPrice';
-import { Loading } from '../Loading';
+import { Loading } from '../Base/Loading';
 
-export type OwnedObjectType = {
-  id: string;
+export type OwnedObjectType = KioskItem & {
   display: Record<string, string>;
-  type: string;
-  listing?: KioskListing;
 };
 
 export function OwnedObjects({
@@ -45,7 +47,7 @@ export function OwnedObjects({
     if (!kioskId) return;
 
     const tx = new TransactionBlock();
-    place(tx, item.type, kioskId, kioskOwnerCap, item.id);
+    place(tx, item.type, kioskId, kioskOwnerCap, item.objectId);
     const success = await signAndExecute({ tx });
     if (success) getOwnedObjects();
   };
@@ -53,7 +55,7 @@ export function OwnedObjects({
   const placeAndListToKiosk = async (item: OwnedObjectType, price: string) => {
     if (!kioskId) return;
     const tx = new TransactionBlock();
-    placeAndList(tx, item.type, kioskId, kioskOwnerCap, item.id, price);
+    placeAndList(tx, item.type, kioskId, kioskOwnerCap, item.objectId, price);
     const success = await signAndExecute({ tx });
     if (success) {
       getOwnedObjects();
@@ -75,7 +77,17 @@ export function OwnedObjects({
 
     if (!data) return;
 
-    setOwnedObjects(parseObjectDisplays(data));
+    const displays = parseObjectDisplays(data);
+
+    // Simple mapping to OwnedObject style.
+    const items = data.map((item) => ({
+      display: displays[getObjectId(item)] || {},
+      type: getObjectType(item) || '',
+      isLocked: false,
+      objectId: getObjectId(item),
+    }));
+
+    setOwnedObjects(items);
   };
 
   useEffect(() => {
@@ -86,12 +98,12 @@ export function OwnedObjects({
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-      {ownedObjects.map((object) => (
+      {ownedObjects.map((item) => (
         <OwnedObject
-          key={object.id}
-          object={object}
+          key={item.objectId}
+          object={item}
           placeFn={placeToKiosk}
-          listFn={(item: OwnedObjectType) => setModalItem(item)}
+          listFn={(selectedItem: OwnedObjectType) => setModalItem(selectedItem)}
         />
       ))}
 

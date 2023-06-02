@@ -14,7 +14,7 @@ export function SuiConnectButton() {
   const navigate = useNavigate();
   useEffect(() => {
     navigate('/');
-  }, [currentAccount?.address]);
+  }, [navigate, currentAccount?.address]);
 
   return (
     <ConnectButton

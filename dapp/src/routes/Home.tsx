@@ -7,10 +7,10 @@ import { KIOSK_OWNER_CAP, createKioskAndShare } from '@mysten/kiosk';
 import { useEffect, useState } from 'react';
 import { TransactionBlock, getObjectFields, getObjectId } from '@mysten/sui.js';
 import { useTransactionExecution } from '../hooks/useTransactionExecution';
-import { KioskData } from '../components/KioskData';
-import { Loading } from '../components/Loading';
+import { KioskData } from '../components/Kiosk/KioskData';
+import { Loading } from '../components/Base/Loading';
 import { localStorageKeys } from '../utils/utils';
-import { SuiConnectButton } from '../components/SuiConnectButton';
+import { SuiConnectButton } from '../components/Base/SuiConnectButton';
 
 function Home() {
   const { currentAccount } = useWalletKit();
@@ -86,7 +86,9 @@ function Home() {
                       <h2 className="font-bold text-2xl">
                         Connect your wallet to view your kiosk
                       </h2>
-                      <p>Create your kiosk to start trading.</p>
+                      <p className="pb-6">
+                        Create your kiosk to start trading.
+                      </p>
                     </div>
                     <SuiConnectButton />
                   </div>

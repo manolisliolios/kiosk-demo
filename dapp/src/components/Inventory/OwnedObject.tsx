@@ -1,12 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { KioskData } from '../KioskData';
+import { KioskData } from '../Kiosk/KioskData';
 import { OwnedObjectType } from './OwnedObjects';
 import { DisplayObject } from '../DisplayObject';
 import { useState } from 'react';
 import { actionWithLoader } from '../../utils/buttons';
-import { Button } from '../Button';
+import { Button } from '../Base/Button';
 
 export function OwnedObject({
   object,

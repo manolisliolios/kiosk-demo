@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { ModalBase } from './Base';
 import { OwnedObjectType } from '../Inventory/OwnedObjects';
 import { DisplayObjectThumbnail } from '../DisplayObjectThumbnail';
-import { Button } from '../Button';
+import { Button } from '../Base/Button';
 
 export interface ListPriceProps {
   item: OwnedObjectType;

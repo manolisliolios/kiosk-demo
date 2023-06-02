@@ -2,12 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-  KIOSK_ITEM,
-  KIOSK_LISTING,
-  KIOSK_OWNER_CAP,
+  KioskItem,
   KioskListing,
-  TESTNET_RULES_PACKAGE_ADDRESS,
-  customEnvironment,
   delist,
   fetchKiosk,
   list,
@@ -20,7 +16,7 @@ import {
 import { useRpc } from '../../hooks/useRpc';
 import { useEffect, useMemo, useState } from 'react';
 import { KioskItem as KioskItemCmp } from './KioskItem';
-import { TransactionBlock, testnetConnection } from '@mysten/sui.js';
+import { TransactionBlock } from '@mysten/sui.js';
 import { ListPrice } from '../Modals/ListPrice';
 import { OwnedObjectType } from '../Inventory/OwnedObjects';
 import {
@@ -30,7 +26,7 @@ import {
   parseObjectDisplays,
 } from '../../utils/utils';
 import { useTransactionExecution } from '../../hooks/useTransactionExecution';
-import { Loading } from '../Loading';
+import { Loading } from '../Base/Loading';
 import { toast } from 'react-hot-toast';
 import { useWalletKit } from '@mysten/wallet-kit';
 import { useLocation } from 'react-router-dom';
@@ -94,7 +90,15 @@ export function KioskItems({
     });
 
     localStorage.setItem(localStorageKeys.LAST_VISITED_KIOSK_ID, kioskId);
-    setKioskItems(parseObjectDisplays(items || []));
+
+    const displays = parseObjectDisplays(items) || {};
+    const ownedItems = res.items.map((item: KioskItem) => {
+      return {
+        ...item,
+        display: displays[item.objectId] || {},
+      };
+    });
+    setKioskItems(ownedItems);
     processKioskListings(res.items.map((x) => x.listing) as KioskListing[]);
     setLoading(false);
   };
@@ -111,11 +115,11 @@ export function KioskItems({
   };
 
   const takeFromKiosk = async (item: OwnedObjectType) => {
-    if (!item?.id || !kioskId || !address || !kioskOwnerCap) return;
+    if (!item?.objectId || !kioskId || !address || !kioskOwnerCap) return;
 
     const tx = new TransactionBlock();
 
-    const obj = take(tx, item.type, kioskId, kioskOwnerCap, item.id);
+    const obj = take(tx, item.type, kioskId, kioskOwnerCap, item.objectId);
 
     tx.transferObjects([obj], tx.pure(address));
 
@@ -124,10 +128,10 @@ export function KioskItems({
   };
 
   const delistFromKiosk = async (item: OwnedObjectType) => {
-    if (!item?.id || !kioskId || !address || !kioskOwnerCap) return;
+    if (!item?.objectId || !kioskId || !address || !kioskOwnerCap) return;
     const tx = new TransactionBlock();
 
-    delist(tx, item.type, kioskId, kioskOwnerCap, item.id);
+    delist(tx, item.type, kioskId, kioskOwnerCap, item.objectId);
 
     const success = await signAndExecute({ tx });
 
@@ -139,7 +143,7 @@ export function KioskItems({
 
     const tx = new TransactionBlock();
 
-    list(tx, item.type, kioskId, kioskOwnerCap, item.id, price);
+    list(tx, item.type, kioskId, kioskOwnerCap, item.objectId, price);
 
     const success = await signAndExecute({ tx });
 
@@ -181,7 +185,7 @@ export function KioskItems({
         item.type,
         item.listing.price,
         kioskId,
-        item.id,
+        item.objectId,
         policy[0],
         environment,
         {
@@ -215,10 +219,10 @@ export function KioskItems({
       <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-5">
         {kioskItems.map((item: OwnedObjectType) => (
           <KioskItemCmp
-            key={item.id}
+            key={item.objectId}
             item={item}
             isGuest={!isOwnedKiosk}
-            listing={kioskListings && kioskListings[item.id]}
+            listing={kioskListings && kioskListings[item.objectId]}
             takeFn={takeFromKiosk}
             listFn={(item: OwnedObjectType) => setModalItem(item)}
             delistFn={(item: OwnedObjectType) => delistFromKiosk(item)}

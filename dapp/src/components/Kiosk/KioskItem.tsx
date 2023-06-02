@@ -6,8 +6,8 @@ import { DisplayObject } from '../DisplayObject';
 import { useState } from 'react';
 // import { Spinner } from "../Spinner";
 import { actionWithLoader } from '../../utils/buttons';
-import { Button } from '../Button';
-import { KioskListing, purchase } from '@mysten/kiosk';
+import { Button } from '../Base/Button';
+import { KioskListing } from '@mysten/kiosk';
 
 export type KioskItemProps = {
   isGuest?: boolean;

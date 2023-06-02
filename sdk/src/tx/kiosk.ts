@@ -230,7 +230,9 @@ export function withdrawFromKiosk(
 ): TransactionArgument {
   let amountArg =
     amount !== null
-      ? tx.pure(amount, 'Option<u64>')
+      ? tx.pure( {
+        Some: amount
+      }, 'Option<u64>')
       : tx.pure({ None: true }, 'Option<u64>');
 
   let [coin] = tx.moveCall({

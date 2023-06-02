@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useNavigate } from 'react-router-dom';
-import FindKiosk from './Kiosk/FindKiosk';
+import FindKiosk from '../Kiosk/FindKiosk';
 import { SuiConnectButton } from './SuiConnectButton';
 
 export function Header(): JSX.Element {
