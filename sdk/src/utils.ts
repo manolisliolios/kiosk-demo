@@ -3,24 +3,31 @@
 
 import {
   JsonRpcProvider,
+  ObjectId,
   SharedObjectRef,
-  SuiObjectDataOptions,
   SuiObjectRef,
+  SuiObjectResponse,
   TransactionArgument,
   TransactionBlock,
+  getObjectFields,
 } from '@mysten/sui.js';
-import { KioskData } from './query/kiosk';
+import { KioskData, KioskListing } from './query/kiosk';
 import { DynamicFieldInfo } from '@mysten/sui.js/dist/types/dynamic_fields';
-import { bcs, Kiosk } from './bcs';
+import { bcs } from './bcs';
+import { KIOSK_TYPE, Kiosk, RulesEnvironmentParam } from './types';
+import {
+  MAINNET_RULES_PACKAGE_ADDRESS,
+  TESTNET_RULES_PACKAGE_ADDRESS,
+} from './constants';
 
-/**
- * A valid argument for any of the Kiosk functions.
- */
-export type ObjectArgument =
-  | string
-  | TransactionArgument
-  | SharedObjectRef
-  | SuiObjectRef;
+/* A simple map to the rule package addresses */
+// TODO: Supply the mainnet and devnet addresses.
+export const rulesPackageAddresses = {
+  mainnet: MAINNET_RULES_PACKAGE_ADDRESS,
+  testnet: TESTNET_RULES_PACKAGE_ADDRESS,
+  devnet: '',
+  custom: null,
+};
 
 /**
  * Convert any valid input into a TransactionArgument.
@@ -62,12 +69,20 @@ export async function getKioskObject(
     throw new Error(`Kiosk ${id} not found; ${queryRes.error}`);
   }
 
-  // @ts-ignore // needs a fix in TS SDK types
-  return bcs.de('Kiosk', queryRes.data.bcs!.bcsBytes, 'base64');
+  if (!queryRes.data.bcs || !('bcsBytes' in queryRes.data.bcs)) {
+    throw new Error(`Invalid kiosk query: ${id}, expected object, got package`);
+  }
+
+  //@ts-ignore
+  return bcs.de(KIOSK_TYPE, queryRes.data.bcs!.bcsBytes, 'base64');
 }
 
 // helper to extract kiosk data from dynamic fields.
-export function extractKioskData(data: DynamicFieldInfo[]): KioskData {
+export function extractKioskData(
+  data: DynamicFieldInfo[],
+  listings: KioskListing[],
+  lockedItemIds: string[],
+): KioskData {
   return data.reduce<KioskData>(
     (acc: KioskData, val: DynamicFieldInfo) => {
       const type = getTypeWithoutPackageAddress(val.name.type);
@@ -76,39 +91,99 @@ export function extractKioskData(data: DynamicFieldInfo[]): KioskData {
         case 'kiosk::Item':
           acc.itemIds.push(val.objectId);
           acc.items.push({
-            itemId: val.objectId,
-            itemType: val.objectType,
+            objectId: val.objectId,
+            type: val.objectType,
+            isLocked: false,
           });
           break;
         case 'kiosk::Listing':
           acc.listingIds.push(val.objectId);
-          acc.listings.push({
-            itemId: val.name.value.id,
+          listings.push({
+            objectId: val.name.value.id,
             listingId: val.objectId,
             isExclusive: val.name.value.is_exclusive,
           });
           break;
+        case 'kiosk::Lock':
+          lockedItemIds?.push(val.name.value.id);
+          break;
       }
       return acc;
     },
-    { listings: [], items: [], itemIds: [], listingIds: [] },
+    { items: [], itemIds: [], listingIds: [], extensions: [] },
   );
 }
 
-// simple multiGetObjects wrapper to simplify cases on functions.
-export function getObjects(
-  provider: JsonRpcProvider,
-  ids: string[],
-  options: SuiObjectDataOptions,
-) {
-  if (ids.length === 0) {
-    return [];
-  }
-
-  return provider.multiGetObjects({ ids, options });
+// e.g. 0x2::kiosk::Item -> kiosk::Item
+export function getTypeWithoutPackageAddress(type: string) {
+  return type.split('::').slice(-2).join('::');
 }
 
-// e.g. 0x2::kiosk::Item -> kiosk::Item
-export const getTypeWithoutPackageAddress = (type: string) => {
-  return type.split('::').slice(-2).join('::');
-};
+/**
+ * A helper that attaches the listing prices to kiosk listings.
+ */
+export function attachListingsAndPrices(
+  kioskData: KioskData,
+  listings: KioskListing[],
+  listingObjects: SuiObjectResponse[],
+) {
+  // map item listings as {item_id: KioskListing}
+  // for easier mapping on the nex
+  const itemListings = listings.reduce<Record<ObjectId, KioskListing>>(
+    (acc: Record<ObjectId, KioskListing>, item, idx) => {
+      acc[item.objectId] = { ...item };
+
+      // return in case we don't have any listing objects.
+      // that's the case when we don't have the `listingPrices` included.
+      if (listingObjects.length === 0) return acc;
+
+      const data = getObjectFields(listingObjects[idx]);
+      if (!data) return acc;
+
+      acc[item.objectId].price = data.value;
+      return acc;
+    },
+    {},
+  );
+
+  kioskData.items.map((item) => {
+    item.listing = itemListings[item.objectId] || undefined;
+  });
+}
+
+/**
+ * A Helper to attach locked state to items in Kiosk Data.
+ */
+export function attachLockedItems(
+  kioskData: KioskData,
+  lockedItemIds: ObjectId[],
+) {
+  // map lock status in an array of type { item_id: true }
+  const lockedStatuses = lockedItemIds.reduce<Record<ObjectId, boolean>>(
+    (acc: Record<ObjectId, boolean>, item: string) => {
+      acc[item] = true;
+      return acc;
+    },
+    {},
+  );
+
+  // parse lockedItemIds and attach their locked status.
+  kioskData.items.map((item) => {
+    item.isLocked = lockedStatuses[item.objectId] || false;
+  });
+}
+
+/**
+ * A helper to get a rule's environment address.
+ */
+export function getRulePackageAddress(
+  environment: RulesEnvironmentParam,
+): string {
+  // if we have custom environment, we return it.
+  if (environment.env === 'custom') {
+    if (!environment.address)
+      throw new Error('Please supply the custom package address for rules.');
+    return environment.address;
+  }
+  return rulesPackageAddresses[environment.env];
+}

@@ -1,7 +1,6 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { SuiConnectButton } from '../components/SuiConnectButton';
 import { useWalletKit } from '@mysten/wallet-kit';
 import { useRpc } from '../hooks/useRpc';
 import { KIOSK_OWNER_CAP, createKioskAndShare } from '@mysten/kiosk';
@@ -10,8 +9,8 @@ import { TransactionBlock, getObjectFields, getObjectId } from '@mysten/sui.js';
 import { useTransactionExecution } from '../hooks/useTransactionExecution';
 import { KioskData } from '../components/KioskData';
 import { Loading } from '../components/Loading';
-import FindKiosk from '../components/Kiosk/FindKiosk';
 import { localStorageKeys } from '../utils/utils';
+import { SuiConnectButton } from '../components/SuiConnectButton';
 
 function Home() {
   const { currentAccount } = useWalletKit();
@@ -22,7 +21,7 @@ function Home() {
   const provider = useRpc();
 
   const findUserKiosks = async () => {
-    if (!currentAccount?.address) return; 
+    if (!currentAccount?.address) return;
 
     setLoadingCap(true);
 
@@ -34,16 +33,19 @@ function Home() {
         showContent: true,
       },
     });
-    
-    const kioskIdList = kiosks?.data?.map((x) => getObjectFields(x)?.for)
+
+    const kioskIdList = kiosks?.data?.map((x) => getObjectFields(x)?.for);
     setKioskIds(kioskIdList);
 
     const kioskOwnerCaps = kiosks?.data.map((x) => getObjectId(x));
 
-
     // save to localStorage for easy retrieval throughout the app.
     localStorage.setItem(localStorageKeys.USER_KIOSK_ID, kioskIdList[0]);
-    localStorage.setItem(localStorageKeys.USER_KIOSK_OWNER_CAP, kioskOwnerCaps[0]);
+    localStorage.setItem(
+      localStorageKeys.USER_KIOSK_OWNER_CAP,
+      kioskOwnerCaps[0],
+    );
+    setKioskId(kioskIdList[0]);
     setLoadingCap(false);
   };
 
@@ -65,22 +67,31 @@ function Home() {
   useEffect(() => {
     if (!currentAccount?.address) {
       setKioskIds([]);
+      setKioskId(null);
+      localStorage.removeItem(localStorageKeys.USER_KIOSK_ID);
     }
     findUserKiosks();
   }, [currentAccount?.address]);
 
   return (
-    <div className="container min-h-screen">
+    <div className="container">
       <div>
         {!kioskId && (
-          <div className=" mb-12 min-h-screen flex items-center justify-center">
+          <div className=" mb-12 flex items-center justify-center">
             <div>
-
-
-              <FindKiosk></FindKiosk>
-              <div className="flex justify-center">
-                <SuiConnectButton></SuiConnectButton>
-              </div>
+              {!currentAccount?.address && (
+                <div className="flex justify-center min-h-[70vh] items-center">
+                  <div className="text-center">
+                    <div>
+                      <h2 className="font-bold text-2xl">
+                        Connect your wallet to view your kiosk
+                      </h2>
+                      <p>Create your kiosk to start trading.</p>
+                    </div>
+                    <SuiConnectButton />
+                  </div>
+                </div>
+              )}
 
               {loadingCap && <Loading />}
 
@@ -98,13 +109,18 @@ function Home() {
                     </div>
                   )}
 
-                  {currentAccount && (
-                    <div className="flex gap-4 mt-6 justify-center">
-                      {kioskIds.length < 1 && (
-                        <button onClick={createNewKiosk}>
-                          Create New Kiosk
-                        </button>
-                      )}
+                  {currentAccount && kioskIds.length < 1 && (
+                    <div className=" gap-4 mt-6 text-center">
+                      <div>
+                        <h2 className="font-bold text-2xl">
+                          You don't have a kiosk yet.
+                        </h2>
+                        <p>Create your kiosk to start trading.</p>
+                      </div>
+
+                      <button onClick={createNewKiosk} className="mt-8">
+                        Create your Kiosk
+                      </button>
                     </div>
                   )}
                 </>
@@ -113,11 +129,9 @@ function Home() {
           </div>
         )}
 
-        {kioskId && <KioskData setSelectedKiosk={setKioskId} />}
-      </div>
-
-      <div className="mt-6 border-t border-primary text-center py-6">
-        Copyright © 2023 by Mysten Labs
+        {kioskId && currentAccount?.address && (
+          <KioskData setSelectedKiosk={setKioskId} />
+        )}
       </div>
     </div>
   );

@@ -30,23 +30,24 @@ export function KioskItem({
 }: KioskItemProps): JSX.Element {
   const [loading, setLoading] = useState<boolean>(false);
 
-
-  if (isGuest) return (
-    <DisplayObject item={item} listing={listing}>
-      <>
-        {listing && purchaseFn && (
-          <Button
-            loading={loading}
-            className="btn-outline-primary md:col-span-2"
-            onClick={() => actionWithLoader(purchaseFn, {...item, listing}, setLoading)}
-          >
-            Purchase
-          </Button>
-        )
-        }
-      </>
-    </DisplayObject>
-  )
+  if (isGuest)
+    return (
+      <DisplayObject item={item} listing={listing}>
+        <>
+          {listing && purchaseFn && (
+            <Button
+              loading={loading}
+              className="btn-outline-primary md:col-span-2"
+              onClick={() =>
+                actionWithLoader(purchaseFn, { ...item, listing }, setLoading)
+              }
+            >
+              Purchase
+            </Button>
+          )}
+        </>
+      </DisplayObject>
+    );
   return (
     <DisplayObject item={item} listing={listing}>
       <>
@@ -78,7 +79,6 @@ export function KioskItem({
           </Button>
         )}
       </>
-
     </DisplayObject>
   );
 }

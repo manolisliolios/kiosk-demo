@@ -1,18 +1,34 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { KioskListing, delist, fetchKiosk, list, place, purchaseAndResolvePolicies, queryTransferPolicy, take } from '@mysten/kiosk';
-import { KioskData as LocalKioskDataParams } from '../KioskData';
+import {
+  KIOSK_ITEM,
+  KIOSK_LISTING,
+  KIOSK_OWNER_CAP,
+  KioskListing,
+  TESTNET_RULES_PACKAGE_ADDRESS,
+  customEnvironment,
+  delist,
+  fetchKiosk,
+  list,
+  place,
+  purchaseAndResolvePolicies,
+  queryTransferPolicy,
+  take,
+  testnetEnvironment,
+} from '@mysten/kiosk';
 import { useRpc } from '../../hooks/useRpc';
 import { useEffect, useMemo, useState } from 'react';
 import { KioskItem as KioskItemCmp } from './KioskItem';
-import {
-  SuiObjectResponse,
-  TransactionBlock,
-} from '@mysten/sui.js';
+import { TransactionBlock, testnetConnection } from '@mysten/sui.js';
 import { ListPrice } from '../Modals/ListPrice';
 import { OwnedObjectType } from '../Inventory/OwnedObjects';
-import { getOwnedKiosk, getOwnedKioskCap, parseObjectDisplays } from '../../utils/utils';
+import {
+  getOwnedKiosk,
+  getOwnedKioskCap,
+  localStorageKeys,
+  parseObjectDisplays,
+} from '../../utils/utils';
 import { useTransactionExecution } from '../../hooks/useTransactionExecution';
 import { Loading } from '../Loading';
 import { toast } from 'react-hot-toast';
@@ -22,23 +38,27 @@ import { useLocation } from 'react-router-dom';
 export function KioskItems({
   kioskId,
   address,
-}: { address?: string } & LocalKioskDataParams): JSX.Element {
+}: {
+  address?: string;
+  kioskId?: string;
+}): JSX.Element {
   const provider = useRpc();
   const [loading, setLoading] = useState<boolean>(false);
-  const {currentAccount} = useWalletKit();
+  const { currentAccount } = useWalletKit();
   const location = useLocation();
 
-  const isKioskPage = location.pathname.startsWith('/kiosk/')
+  const isKioskPage = location.pathname.startsWith('/kiosk/');
 
   // we are depending on currentAccount too, as this is what triggers the `getOwnedKioskCap()` function to change
-  const kioskOwnerCap = useMemo(() => { 
+  const kioskOwnerCap = useMemo(() => {
     return getOwnedKioskCap();
   }, [currentAccount?.address]);
 
   // checks if this is an owned kiosk.
   // We are depending on currentAccount too, as this is what triggers the `getOwnedKioskCap()` function to change
+  // using endsWith because we support it with both 0x prefix and without.
   const isOwnedKiosk = useMemo(() => {
-    return getOwnedKiosk() === (kioskId?.startsWith('0x') ? kioskId: `0x${kioskId}`);
+    return getOwnedKiosk()?.endsWith(kioskId || '~');
   }, [kioskId, currentAccount?.address]);
 
   const [modalItem, setModalItem] = useState<OwnedObjectType | null>(null);
@@ -63,26 +83,30 @@ export function KioskItems({
       kioskId,
       { limit: 1000 },
       {
-        includeKioskFields: true,
-        includeItems: true,
+        withKioskFields: true,
         withListingPrices: true,
       },
     ); // could also add `cursor` for pagination
+    // get items.
+    const items = await provider.multiGetObjects({
+      ids: res.itemIds,
+      options: { showDisplay: true, showType: true },
+    });
 
-    setKioskItems(
-      parseObjectDisplays((res.items as SuiObjectResponse[]) || []),
-    );
-    processKioskListings((res.listings as KioskListing[]) || []);
+    localStorage.setItem(localStorageKeys.LAST_VISITED_KIOSK_ID, kioskId);
+    setKioskItems(parseObjectDisplays(items || []));
+    processKioskListings(res.items.map((x) => x.listing) as KioskListing[]);
     setLoading(false);
   };
 
   const processKioskListings = (data: KioskListing[]) => {
-
     const results: Record<string, KioskListing> = {};
 
-    data.map((x: KioskListing) => {
-      results[x.itemId || ''] = x
-    });
+    data
+      .filter((x) => !!x)
+      .map((x: KioskListing) => {
+        results[x.objectId || ''] = x;
+      });
     setKioskListings(results);
   };
 
@@ -117,50 +141,78 @@ export function KioskItems({
 
     list(tx, item.type, kioskId, kioskOwnerCap, item.id, price);
 
-    await signAndExecute({ tx });
+    const success = await signAndExecute({ tx });
 
-    getKioskData(); // replace with single kiosk Item search here and replace
-    setModalItem(null); // replace modal.
+    if (success) {
+      getKioskData(); // replace with single kiosk Item search here and replace
+      setModalItem(null); // replace modal.
+    }
   };
 
   const purchaseItem = async (item: OwnedObjectType) => {
-
     const ownedKiosk = getOwnedKiosk();
     const ownedKioskCap = getOwnedKioskCap();
 
-    if(!item || !item.listing || !kioskId || !address || !ownedKiosk || !ownedKioskCap) return;
+    if (
+      !item ||
+      !item.listing?.price ||
+      !kioskId ||
+      !address ||
+      !ownedKiosk ||
+      !ownedKioskCap
+    )
+      return;
 
     const policy = await queryTransferPolicy(provider, item.type);
 
     const policyId = policy[0]?.id;
-    if(!policyId)
-      return toast.error(`This item doesn't have a Transfer Policy attached so it can't be traded through kiosk.`);
-    
+    if (!policyId)
+      return toast.error(
+        `This item doesn't have a Transfer Policy attached so it can't be traded through kiosk.`,
+      );
+
     const tx = new TransactionBlock();
 
-    const purchasedItem = purchaseAndResolvePolicies(tx, item.type, item.listing, kioskId, item.id, policy[0]);
+    const environment = testnetEnvironment;
 
-    if(!purchasedItem) return; // cancel if we don't have an item returned.
+    try {
+      const result = purchaseAndResolvePolicies(
+        tx,
+        item.type,
+        item.listing.price,
+        kioskId,
+        item.id,
+        policy[0],
+        environment,
+        {
+          ownedKiosk,
+          ownedKioskCap,
+        },
+      );
 
-    place(tx, item.type, ownedKiosk, ownedKioskCap , purchasedItem);
+      if (result.canTransfer)
+        place(tx, item.type, ownedKiosk, ownedKioskCap, result.item);
 
-    await signAndExecute({tx});
+      const success = await signAndExecute({ tx });
 
-    getKioskData();
-  }
+      if (success) getKioskData();
+    } catch (e: any) {
+      toast.error(e?.message);
+    }
+  };
 
   if (loading) return <Loading />;
   return (
     <div className="mt-12">
-        {
-          // We're hiding this when we've clicked "view kiosk" for our own kiosk.
-          isOwnedKiosk && isKioskPage && 
-          <div className="bg-yellow-300 text-black rounded-lg px-3 py-2 mb-6">
+      {
+        // We're hiding this when we've clicked "view kiosk" for our own kiosk.
+        isOwnedKiosk && isKioskPage && (
+          <div className="bg-yellow-300 text-black rounded px-3 py-2 mb-6">
             You're viewing your own kiosk
-            </div>
-        }
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-    
+          </div>
+        )
+      }
+      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-5">
         {kioskItems.map((item: OwnedObjectType) => (
           <KioskItemCmp
             key={item.id}

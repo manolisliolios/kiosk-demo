@@ -4,12 +4,19 @@
 import { Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { WalletKitProvider } from '@mysten/wallet-kit';
+import { Header } from './components/Header';
 
 export default function Root() {
-    return (
-        <WalletKitProvider enableUnsafeBurner={import.meta.env.DEV}>
-            <Outlet />
-            <Toaster position="bottom-center" />
-        </WalletKitProvider>
-    );
+  return (
+    <WalletKitProvider enableUnsafeBurner={import.meta.env.DEV}>
+      <Header></Header>
+      <div className="min-h-[80vh]">
+        <Outlet />
+      </div>
+      <div className="mt-6 border-t border-primary text-center py-6">
+        Copyright © 2023 by Mysten Labs
+      </div>
+      <Toaster position="bottom-center" />
+    </WalletKitProvider>
+  );
 }

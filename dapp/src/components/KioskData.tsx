@@ -16,18 +16,16 @@ export type KioskData = {
   setSelectedKiosk?: (address: string | null) => void;
 };
 
-export function KioskData({
-  setSelectedKiosk,
-}: KioskData) {
+export function KioskData({ setSelectedKiosk }: KioskData) {
   const provider = useRpc();
   const { currentAccount } = useWalletKit();
   const [kiosk, setKiosk] = useState<Kiosk | undefined>(undefined);
 
-  const kioskId = useMemo(()=>{
+  const kioskId = useMemo(() => {
     return getOwnedKiosk() || '';
-  }, [])
+  }, []);
 
-  const kioskOwnerCap = useMemo(()=>{
+  const kioskOwnerCap = useMemo(() => {
     return getOwnedKioskCap() || '';
   }, []);
 
@@ -38,15 +36,8 @@ export function KioskData({
   }, [kioskId]);
 
   return (
-    <div className="container py-12 min-h-[80vh]">
-      <button
-        onClick={() => setSelectedKiosk && setSelectedKiosk(null)}
-        className="mb-6"
-      >
-        Back to initial view
-      </button>
-
-      <div className="mb-12 ">
+    <div className="container">
+      <div className="my-12 ">
         {kiosk && (
           <div className="gap-5 items-center">
             <div>
@@ -85,18 +76,13 @@ export function KioskData({
             {currentAccount && (
               <KioskItems
                 kioskId={kioskId}
-                kioskOwnerCap={kioskOwnerCap}
                 address={currentAccount.address}
               ></KioskItems>
             )}
           </Tab.Panel>
           <Tab.Panel className="mt-12">
             {currentAccount && (
-              <OwnedObjects
-                kioskId={kioskId}
-                kioskOwnerCap={kioskOwnerCap}
-                address={currentAccount.address}
-              ></OwnedObjects>
+              <OwnedObjects address={currentAccount.address}></OwnedObjects>
             )}
           </Tab.Panel>
         </Tab.Panels>

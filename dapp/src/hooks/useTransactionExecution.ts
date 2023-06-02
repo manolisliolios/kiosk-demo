@@ -6,6 +6,7 @@ import { useRpc } from './useRpc';
 import {
   SuiTransactionBlockResponseOptions,
   TransactionBlock,
+  getExecutionStatus,
 } from '@mysten/sui.js';
 
 import { toast } from 'react-hot-toast';
@@ -36,7 +37,7 @@ export function useTransactionExecution() {
         options,
       });
 
-      return res;
+      return getExecutionStatus(res)?.status === 'success' || false;
     } catch (e: unknown) {
       if (typeof e === 'string') toast.error(e);
       if (e instanceof Error) toast.error(e.message);

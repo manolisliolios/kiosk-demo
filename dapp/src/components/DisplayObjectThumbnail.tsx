@@ -6,7 +6,7 @@ import { OwnedObjectType } from './Inventory/OwnedObjects';
 export function DisplayObjectThumbnail({ item }: { item: OwnedObjectType }) {
   return (
     <div className="flex gap-5 items-center ">
-      <div className="bg-gray-100 w-[100px] h-[50px] overflow-hidden rounded-2xl my-6">
+      <div className="bg-gray-100 w-[100px] h-[50px] overflow-hidden rounded my-6">
         <img
           src={item.display.image_url}
           className="object-contain object-center w-full h-full"

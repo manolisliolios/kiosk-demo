@@ -1,14 +1,18 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PaginatedObjectsResponse, TransactionBlock } from '@mysten/sui.js';
 import { OwnedObject } from './OwnedObject';
 import { KioskData } from '../KioskData';
 import { useRpc } from '../../hooks/useRpc';
-import { parseObjectDisplays } from '../../utils/utils';
+import {
+  getOwnedKiosk,
+  getOwnedKioskCap,
+  parseObjectDisplays,
+} from '../../utils/utils';
 import { useTransactionExecution } from '../../hooks/useTransactionExecution';
-import { place, placeAndList } from '@mysten/kiosk';
+import { KioskListing, place, placeAndList } from '@mysten/kiosk';
 import { ListPrice } from '../Modals/ListPrice';
 import { Loading } from '../Loading';
 
@@ -16,15 +20,21 @@ export type OwnedObjectType = {
   id: string;
   display: Record<string, string>;
   type: string;
-  listing?: any;
+  listing?: KioskListing;
 };
 
 export function OwnedObjects({
   address,
-  kioskId,
-  kioskOwnerCap,
 }: { address: string } & KioskData): JSX.Element {
   const provider = useRpc();
+
+  const kioskId = useMemo(() => {
+    return getOwnedKiosk() || '';
+  }, []);
+
+  const kioskOwnerCap = useMemo(() => {
+    return getOwnedKioskCap() || '';
+  }, []);
 
   const [loading, setLoading] = useState<boolean>(false);
   const [ownedObjects, setOwnedObjects] = useState<OwnedObjectType[]>([]);
@@ -36,17 +46,19 @@ export function OwnedObjects({
 
     const tx = new TransactionBlock();
     place(tx, item.type, kioskId, kioskOwnerCap, item.id);
-    await signAndExecute({ tx });
-    getOwnedObjects();
+    const success = await signAndExecute({ tx });
+    if (success) getOwnedObjects();
   };
 
   const placeAndListToKiosk = async (item: OwnedObjectType, price: string) => {
     if (!kioskId) return;
     const tx = new TransactionBlock();
     placeAndList(tx, item.type, kioskId, kioskOwnerCap, item.id, price);
-    await signAndExecute({ tx });
-    getOwnedObjects();
-    setModalItem(null); // replace modal.
+    const success = await signAndExecute({ tx });
+    if (success) {
+      getOwnedObjects();
+      setModalItem(null); // replace modal.
+    }
   };
 
   const getOwnedObjects = async () => {
@@ -77,8 +89,6 @@ export function OwnedObjects({
       {ownedObjects.map((object) => (
         <OwnedObject
           key={object.id}
-          kioskId={kioskId}
-          kioskOwnerCap={kioskOwnerCap}
           object={object}
           placeFn={placeToKiosk}
           listFn={(item: OwnedObjectType) => setModalItem(item)}
