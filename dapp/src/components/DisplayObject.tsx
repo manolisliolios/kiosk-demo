@@ -23,7 +23,7 @@ export function DisplayObject({
   const price = formatSui(mistToSui(listing?.price));
 
   return (
-    <div className="border relative border-primary overflow-hidden text-center flex justify-between flex-col rounded-lg">
+    <div className="border relative border-gray-400 overflow-hidden text-center flex justify-between flex-col rounded-lg">
       <div className="h-[275px] xl:h-[200px] overflow-hidden bg-gray-50">
         <img
           src={item.display.image_url}
@@ -44,7 +44,7 @@ export function DisplayObject({
         )}
 
         {listing && listing.price && (
-          <div className="absolute left-2 top-2 bg-black text-white px-2 py-1 rounded-lg">
+          <div className="absolute left-2 top-2 bg-primary text-white px-2 py-1 rounded-lg">
             {price} SUI
           </div>
         )}

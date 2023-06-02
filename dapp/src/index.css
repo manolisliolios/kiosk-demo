@@ -15,7 +15,7 @@ button {
   @apply bg-primary text-white hover:opacity-70;
 }
 .btn-outline-primary {
-  @apply border border-primary bg-transparent hover:bg-primary hover:text-white;
+  @apply border border-gray-400 bg-transparent hover:bg-primary hover:text-white;
 }
 
 label {
