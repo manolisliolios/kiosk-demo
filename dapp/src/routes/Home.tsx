@@ -112,17 +112,18 @@ function Home() {
                   )}
 
                   {currentAccount && kioskIds.length < 1 && (
-                    <div className=" gap-4 mt-6 text-center">
+                    <div className="min-h-[70vh] flex items-center justify-center gap-4 mt-6 text-center">
                       <div>
                         <h2 className="font-bold text-2xl">
                           You don't have a kiosk yet.
                         </h2>
                         <p>Create your kiosk to start trading.</p>
-                      </div>
-
-                      <button onClick={createNewKiosk} className="mt-8">
+                        <button onClick={createNewKiosk} className="mt-8">
                         Create your Kiosk
                       </button>
+                      </div>
+
+                  
                     </div>
                   )}
                 </>
