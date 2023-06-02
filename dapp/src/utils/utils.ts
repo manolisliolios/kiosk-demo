@@ -8,8 +8,8 @@ import {
   getObjectDisplay,
   getObjectId,
 } from '@mysten/sui.js';
-// Parse the result into a simple {id, display, type} format to use throughout the app.
-// we omit objects without display for beautification (or without image_url :) )
+// Parse the display of a list of objects into a simple {object_id: display} map
+// to use throughout the app.
 export const parseObjectDisplays = (
   data: SuiObjectResponse[],
 ): Record<ObjectId, Record<string, string> | undefined> => {
