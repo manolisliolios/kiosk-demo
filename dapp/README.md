@@ -2,6 +2,21 @@
 
 A demo for kiosk's functionality.
 
+## Installation
+
+
+1. Install dependencies (you can use any package manager)
+```sh
+pnpm install
+```
+
+2. Run the development server
+
+```sh
+pnpm dev
+```
+
+
 ## Kiosk Management
 
 An interactive demo for Kiosk, giving the following flows for a kiosk owner.
