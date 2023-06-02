@@ -39,7 +39,7 @@ If the account doesn't have a kiosk, the purchase will fail.
 
 ### Transfer Policy Rules supported
 Currently, the demo supports the following Transfer Policy cases:
-(That are based on the `@mysten/kiosk` SDK)
+(based on the [`@mysten/kiosk`](https://github.com/MystenLabs/sui/tree/main/sdk/kiosk) SDK)
 
 1. No rules
 2. Royalty rule (soft royalties)
