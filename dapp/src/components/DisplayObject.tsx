@@ -53,9 +53,7 @@ export function DisplayObject({
         {currentAccount?.address ? (
           <div className="grid lg:grid-cols-2 gap-5 mt-6">{children}</div>
         ) : (
-          <div className="mt-6 text-xs">
-            Connect your wallet to purchase or manage.
-          </div>
+          <div className="mt-6 text-xs">Connect your wallet to interact</div>
         )}
       </div>
     </div>

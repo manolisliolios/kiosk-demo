@@ -84,10 +84,11 @@ function Home() {
                   <div className="text-center">
                     <div>
                       <h2 className="font-bold text-2xl">
-                        Connect your wallet to view your kiosk
+                        Connect your wallet to manage your kiosk
                       </h2>
-                      <p className="pb-6">
-                        Create your kiosk to start trading.
+                      <p className="pb-6 pt-3">
+                        Create your kiosk to manage your kiosk and <br />
+                        purchase from other kiosks.
                       </p>
                     </div>
                     <SuiConnectButton />
@@ -119,11 +120,9 @@ function Home() {
                         </h2>
                         <p>Create your kiosk to start trading.</p>
                         <button onClick={createNewKiosk} className="mt-8">
-                        Create your Kiosk
-                      </button>
+                          Create your Kiosk
+                        </button>
                       </div>
-
-                  
                     </div>
                   )}
                 </>

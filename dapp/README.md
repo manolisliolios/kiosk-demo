@@ -4,8 +4,8 @@ A demo for kiosk's functionality.
 
 ## Installation
 
-
 1. Install dependencies (you can use any package manager)
+
 ```sh
 pnpm install
 ```
@@ -15,7 +15,6 @@ pnpm install
 ```sh
 pnpm dev
 ```
-
 
 ## Kiosk Management
 
@@ -27,7 +26,6 @@ An interactive demo for Kiosk, giving the following flows for a kiosk owner.
 4. (Delist / list for sale / take from kiosk) For items in the kiosk.
 5. Withdraw Kiosk profits.
 
-
 ## Purchase Flow
 
 Apart from the management flows, there's also the `purchase flow.`
@@ -38,10 +36,11 @@ If there are items listed for sale, you can purchase them directly. The purchase
 If the account doesn't have a kiosk, the purchase will fail.
 
 ### Transfer Policy Rules supported
+
 Currently, the demo supports the following Transfer Policy cases:
 (based on the [`@mysten/kiosk`](https://github.com/MystenLabs/sui/tree/main/sdk/kiosk) SDK)
 
 1. No rules
 2. Royalty rule (soft royalties)
-3. Kiosk Lock Rule 
+3. Kiosk Lock Rule
 4. Combination of (3 + 4) (strong royalties enforcement)
