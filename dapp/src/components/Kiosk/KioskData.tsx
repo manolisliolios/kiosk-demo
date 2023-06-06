@@ -5,45 +5,29 @@ import { useWalletKit } from '@mysten/wallet-kit';
 import { Tab } from '@headlessui/react';
 import { OwnedObjects } from '../Inventory/OwnedObjects';
 import { KioskItems } from './KioskItems';
-import { Kiosk, getKioskObject, withdrawFromKiosk } from '@mysten/kiosk';
-import { useEffect, useMemo, useState } from 'react';
-import { useRpc } from '../../hooks/useRpc';
+import { withdrawFromKiosk } from '@mysten/kiosk';
 import { TransactionBlock, formatAddress } from '@mysten/sui.js';
 import { ExplorerLink } from '../Base/ExplorerLink';
-import {
-  formatSui,
-  getOwnedKiosk,
-  getOwnedKioskCap,
-  mistToSui,
-} from '../../utils/utils';
+import { formatSui, mistToSui } from '../../utils/utils';
 import { useTransactionExecution } from '../../hooks/useTransactionExecution';
 import { toast } from 'react-hot-toast';
+import { useKioskDetails, useOwnedKiosk } from '../../hooks/kiosk';
+import { Loading } from '../Base/Loading';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { TANSTACK_KIOSK_DATA_KEY } from '../../utils/constants';
+import { Button } from '../Base/Button';
 
-export type KioskData = {
-  setSelectedKiosk?: (address: string | null) => void;
-};
-
-export function KioskData({}: KioskData) {
-  const provider = useRpc();
+export function KioskData() {
   const { currentAccount } = useWalletKit();
-  const [kiosk, setKiosk] = useState<Kiosk | undefined>(undefined);
-
+  const { data: ownedKiosk } = useOwnedKiosk();
   const { signAndExecute } = useTransactionExecution();
 
-  const kioskId = useMemo(() => {
-    return getOwnedKiosk() || '';
-  }, []);
+  const kioskId = ownedKiosk?.kioskId;
+  const kioskOwnerCap = ownedKiosk?.kioskCap;
 
-  const kioskOwnerCap = useMemo(() => {
-    return getOwnedKioskCap() || '';
-  }, []);
+  const { data: kiosk, isLoading } = useKioskDetails(kioskId);
 
-  useEffect(() => {
-    if (!kiosk && kioskId) {
-      getKioskObject(provider, kioskId).then((res) => setKiosk(res));
-    }
-  }, [kioskId]);
-
+  const queryClient = useQueryClient();
   const withdrawProfits = async () => {
     if (!kiosk || !kioskId || !kioskOwnerCap || !currentAccount?.address)
       return;
@@ -55,11 +39,19 @@ export function KioskData({}: KioskData) {
 
     const success = await signAndExecute({ tx });
 
-    if (success) toast.success('Profits withdrawn successfully');
+    if (success) {
+      toast.success('Profits withdrawn successfully');
+      // invalidate query to refetch kiosk data and update the balance.
+      queryClient.invalidateQueries([TANSTACK_KIOSK_DATA_KEY, kioskId]);
+    }
   };
+  const mutation = useMutation({
+    mutationFn: withdrawProfits,
+  });
 
   const profits = formatSui(mistToSui(kiosk?.profits));
 
+  if (isLoading) return <Loading />;
   return (
     <div className="container">
       <div className="my-12 ">
@@ -86,12 +78,13 @@ export function KioskData({}: KioskData) {
             <div className="mt-2">
               Profits: {profits} SUI
               {Number(kiosk.profits) > 0 && (
-                <button
-                  className="text-xs !py-1 ml-3"
-                  onClick={withdrawProfits}
+                <Button
+                  loading={mutation.isLoading}
+                  className=" ease-in-out duration-300 rounded border border-transparent px-4 bg-gray-200 text-xs !py-1 ml-3"
+                  onClick={() => mutation.mutate()}
                 >
                   Withdraw all
-                </button>
+                </Button>
               )}
             </div>
             <div className="mt-2">
@@ -108,12 +101,7 @@ export function KioskData({}: KioskData) {
         </Tab.List>
         <Tab.Panels>
           <Tab.Panel>
-            {currentAccount && (
-              <KioskItems
-                kioskId={kioskId}
-                address={currentAccount.address}
-              ></KioskItems>
-            )}
+            {kioskId && <KioskItems kioskId={kioskId}></KioskItems>}
           </Tab.Panel>
           <Tab.Panel className="mt-12">
             {currentAccount && (

@@ -18,21 +18,23 @@ export function ExplorerLink(opts: LinkOptions) {
       : `https://suiexplorer.com/object/${opts.object}?network=testnet`;
 
   const copyToClipboard = async () => {
+    await navigator.clipboard.writeText(
+      'address' in opts ? opts.address : opts.object,
+    );
     setCopied(true);
     setTimeout(() => {
       setCopied(false);
     }, 3000);
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-ignore
-    await navigator.clipboard.writeText(opts?.address || opts?.object);
   };
   return (
     <>
       <a href={link} className="underline" target="_blank" rel="noreferrer">
         {opts.text}
       </a>
-      <button className="!p-1 ml-3 text-xs" onClick={copyToClipboard}>
+      <button
+        className="!p-1 ml-3 text-xs ease-in-out duration-300 rounded border border-transparent bg-gray-200"
+        onClick={copyToClipboard}
+      >
         {copied ? 'copied' : 'copy'}
       </button>
     </>

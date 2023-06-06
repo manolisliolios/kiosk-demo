@@ -3,19 +3,18 @@
 
 import { OwnedObjectType } from '../Inventory/OwnedObjects';
 import { DisplayObject } from '../DisplayObject';
-import { useState } from 'react';
 // import { Spinner } from "../Spinner";
-import { actionWithLoader } from '../../utils/buttons';
 import { Button } from '../Base/Button';
 import { KioskListing } from '@mysten/kiosk';
+import { KioskFnType, useKioskMutationFn } from '../../hooks/kiosk';
 
 export type KioskItemProps = {
   isGuest?: boolean;
   listing?: KioskListing | null;
-  takeFn: (item: OwnedObjectType) => void;
-  listFn: (item: OwnedObjectType) => void;
-  delistFn: (item: OwnedObjectType) => void;
-  purchaseFn?: (item: OwnedObjectType, price?: string) => void;
+  takeFn: KioskFnType;
+  listFn: KioskFnType;
+  delistFn: KioskFnType;
+  purchaseFn?: KioskFnType;
   item: OwnedObjectType;
 };
 
@@ -28,7 +27,7 @@ export function KioskItem({
   listFn,
   delistFn,
 }: KioskItemProps): JSX.Element {
-  const [loading, setLoading] = useState<boolean>(false);
+  const mutation = useKioskMutationFn();
 
   if (isGuest)
     return (
@@ -36,10 +35,13 @@ export function KioskItem({
         <>
           {listing && purchaseFn && (
             <Button
-              loading={loading}
-              className="btn-outline-primary md:col-span-2"
+              loading={mutation.isLoading}
+              className="border-gray-400 bg-transparent hover:bg-primary hover:text-white md:col-span-2"
               onClick={() =>
-                actionWithLoader(purchaseFn, { ...item, listing }, setLoading)
+                mutation.mutate({
+                  fn: purchaseFn,
+                  object: { ...item, listing },
+                })
               }
             >
               Purchase
@@ -54,16 +56,17 @@ export function KioskItem({
         {!listing && !isGuest && (
           <>
             <Button
-              loading={loading}
-              onClick={() => actionWithLoader(takeFn, item, setLoading)}
+              className="border-transparent py-2 px-4 bg-gray-200"
+              loading={mutation.isLoading}
+              onClick={() => mutation.mutate({ fn: takeFn, object: item })}
             >
               Take from Kiosk
             </Button>
 
             <Button
-              loading={loading}
-              className="btn-outline-primary"
-              onClick={() => actionWithLoader(listFn, item, setLoading)}
+              loading={mutation.isLoading}
+              className="border-gray-400 bg-transparent hover:bg-primary hover:text-white"
+              onClick={() => mutation.mutate({ fn: listFn, object: item })}
             >
               List for Sale
             </Button>
@@ -71,9 +74,9 @@ export function KioskItem({
         )}
         {listing && !isGuest && (
           <Button
-            loading={loading}
-            className="btn-outline-primary md:col-span-2"
-            onClick={() => actionWithLoader(delistFn, item, setLoading)}
+            loading={mutation.isLoading}
+            className="border-gray-400 bg-transparent hover:bg-primary hover:text-white md:col-span-2"
+            onClick={() => mutation.mutate({ fn: delistFn, object: item })}
           >
             Delist item
           </Button>

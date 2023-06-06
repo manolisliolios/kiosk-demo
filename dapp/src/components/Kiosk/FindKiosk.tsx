@@ -1,3 +1,6 @@
+// Copyright (c) Mysten Labs, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 import { FormEvent, ReactElement, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import classnames from 'classnames';
@@ -12,7 +15,9 @@ export default function FindKiosk(): ReactElement {
     if (!searchKiosk || viewingSearchKiosk) return;
     e?.preventDefault();
 
-    navigate('/kiosk/' + searchKiosk);
+    const id = searchKiosk.length === 64 ? `0x${searchKiosk}` : searchKiosk;
+    navigate(`/kiosk/${id}`);
+    setSearchKioskId(id);
   };
 
   const viewingSearchKiosk = searchKiosk === kioskId;
